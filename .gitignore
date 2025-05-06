@@ -1,0 +1,34 @@
+# Node.js / React
+web/node_modules/
+web/build/
+web/.env
+web/.DS_Store
+
+# Flutter / Dart
+mobile/.dart_tool/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/.packages
+mobile/build/
+mobile/ios/Flutter/Flutter.framework
+mobile/ios/Flutter/Flutter.podspec
+mobile/ios/.symlinks/
+mobile/ios/Pods/
+mobile/ios/Runner.xcworkspace/
+mobile/android/.gradle/
+mobile/android/app/build/
+mobile/.idea/
+mobile/pubspec.lock
+
+# macOS & system files
+.DS_Store
+
+# Logs
+*.log
+
+# IDEs
+.vscode/
+.idea/
+
+# Others
+*.iml
