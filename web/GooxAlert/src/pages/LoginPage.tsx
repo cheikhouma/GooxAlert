@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { MapPin, Mail, Lock, ArrowRight } from 'lucide-react';
+import * as Icons from 'lucide-react';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -47,7 +47,7 @@ const LoginPage = () => {
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <div className="flex justify-center">
-            <MapPin className="h-12 w-12 text-primary-600" />
+            <Icons.MapPin className="h-12 w-12 text-primary-600" />
           </div>
           <h2 className="mt-6 text-3xl font-bold text-gray-900">Connexion</h2>
           <p className="mt-2 text-gray-600">
@@ -64,7 +64,7 @@ const LoginPage = () => {
               <label htmlFor="email" className="sr-only">Email</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
+                  <Icons.Mail className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
                   id="email"
@@ -83,7 +83,7 @@ const LoginPage = () => {
               <label htmlFor="password" className="sr-only">Mot de passe</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
+                  <Icons.Lock className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
                   id="password"
@@ -140,7 +140,7 @@ const LoginPage = () => {
               ) : (
                 <>
                   <span className="absolute left-0 inset-y-0 flex items-center pl-3">
-                    <ArrowRight className="h-5 w-5 text-primary-500 group-hover:text-primary-400" />
+                    <Icons.ArrowRight className="h-5 w-5 text-primary-500 group-hover:text-primary-400" />
                   </span>
                   Se connecter
                 </>
@@ -149,34 +149,32 @@ const LoginPage = () => {
           </div>
         </form>
         
-        <div className="mt-6">
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-gray-50 text-gray-500">
-                Pour démonstration uniquement
-              </span>
-            </div>
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-300"></div>
           </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-2 bg-gray-50 text-gray-500">
+              Pour démonstration uniquement
+            </span>
+          </div>
+        </div>
 
-          <div className="mt-6 grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={loginAsUser}
-              className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
-            >
-              Compte utilisateur
-            </button>
-            <button
-              type="button"
-              onClick={loginAsAdmin}
-              className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
-            >
-              Compte admin
-            </button>
-          </div>
+        <div className="mt-6 grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={loginAsUser}
+            className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            Compte utilisateur
+          </button>
+          <button
+            type="button"
+            onClick={loginAsAdmin}
+            className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            Compte admin
+          </button>
         </div>
       </div>
     </div>

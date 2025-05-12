@@ -1,22 +1,18 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import IssueList from '../components/issues/IssueList';
-import { User, MapPin, Edit, LogOut, Bell } from 'lucide-react';
+import { User, MapPin, LogOut } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import {useIssues} from "../contexts/IssueContext.tsx";
+import { useIssues } from "../contexts/IssueContext";
 
 const DashboardPage = () => {
   const { user, logout } = useAuth();
-  const { userIssues, issues } = useIssues();
+  const { userIssues } = useIssues();
   const [activeTab, setActiveTab] = useState<'issues' | 'profile'>('issues');
 
   if (!user) {
     return null;
   }
-
-  const supportedIssues = issues.filter(issue => 
-    user && issue.upvotedBy.includes(user.id)
-  );
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -35,7 +31,7 @@ const DashboardPage = () => {
           </Link>
         </div>
       </div>
-      
+
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         <div className="lg:col-span-1">
           <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
@@ -104,19 +100,6 @@ const DashboardPage = () => {
               
               <div>
                 <div className="flex justify-between text-sm mb-1">
-                  <span className="text-gray-600">Signalements soutenus</span>
-                  <span className="font-medium">{supportedIssues.length}</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className="bg-secondary-600 h-2 rounded-full" 
-                    style={{ width: `${Math.min(100, (supportedIssues.length / 20) * 100)}%` }}
-                  ></div>
-                </div>
-              </div>
-              
-              <div>
-                <div className="flex justify-between text-sm mb-1">
                   <span className="text-gray-600">Problèmes résolus</span>
                   <span className="font-medium">
                     {userIssues.filter(issue => issue.status === 'resolved').length}
@@ -160,17 +143,6 @@ const DashboardPage = () => {
                   >
                     Créer votre premier signalement
                   </Link>
-                </div>
-              )}
-              
-              {supportedIssues.length > 0 && (
-                <div className="mt-12">
-                  <h2 className="text-xl font-bold text-gray-900 mb-6">Signalements soutenus</h2>
-                  <IssueList 
-                    issues={supportedIssues} 
-                    title="" 
-                    showFilters={false}
-                  />
                 </div>
               )}
             </>

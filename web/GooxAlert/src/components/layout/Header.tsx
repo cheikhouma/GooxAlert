@@ -21,7 +21,7 @@ const Header = () => {
           <div className="flex items-center">
             <Link to="/" className="flex-shrink-0 flex items-center">
               <MapPin className="h-8 w-8 text-primary-600" />
-              <span className="ml-2 text-xl font-bold text-gray-900">Smart Dakar</span>
+              <span className="ml-2 text-xl font-bold text-gray-900">GooxAlert</span>
             </Link>
             <nav className="hidden md:ml-6 md:flex md:space-x-8">
               <Link to="/" className="text-gray-700 hover:text-primary-600 px-3 py-2 text-sm font-medium">

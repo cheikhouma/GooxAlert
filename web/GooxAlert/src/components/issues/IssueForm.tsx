@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Camera, MapPin, X } from 'lucide-react';
-import { Issue, IssueCategory, Location } from '../../types';
+import { IssueCategory, Location } from '../../types';
 import { useAuth } from '../../contexts/AuthContext';
 import CategoryIcon from './CategoryIcon';
 import {useIssues} from "../../contexts/IssueContext.tsx";
@@ -29,7 +29,7 @@ const IssueForm: React.FC<IssueFormProps> = ({ initialLocation }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState<IssueCategory>('other');
-  const [location, setLocation] = useState<Location>(initialLocation || {
+  const [location] = useState<Location>(initialLocation || {
     lat: 14.7167,
     lng: -17.4677,
     address: 'Dakar, Sénégal'
@@ -72,10 +72,7 @@ const IssueForm: React.FC<IssueFormProps> = ({ initialLocation }) => {
         category,
         location,
         imageUrl: imagePreview || undefined,
-        userId: user.id,
-        upvotes: 0,
-        upvotedBy: [],
-        comments: [],
+        userId: user.id
       });
       
       // Navigate to the issue details page

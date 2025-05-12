@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import { Issue } from '../../types';
@@ -9,49 +9,27 @@ import { useAuth } from '../../contexts/AuthContext';
 
 
 interface IssueMapProps {
-  issues: Issue[];
+  issues?: Issue[];
   center?: [number, number];
   zoom?: number;
   height?: string;
   selectedId?: string;
+  customMarkers?: Array<{ position: [number, number] }>;
 }
 
 const IssueMap: React.FC<IssueMapProps> = ({ 
-  issues, 
+  issues = [], 
   center = [14.7167, -17.4677], // Default center: Dakar
   zoom = 12,
   height = '500px',
-  selectedId
+  selectedId,
+  customMarkers = []
 }) => {
   const { user } = useAuth(); 
-  const userIssues = issues.filter(issue => issue.userId === user?.id);
-  const [markers, setMarkers] = useState<{[key: string]: L.DivIcon}>({});
-
-  useEffect(() => {
-    // Create custom markers for different categories
-    const createMarkerIcon = (category: string, selected: boolean = false) => {
-      return L.divIcon({
-        className: `issue-marker issue-marker-${category} ${selected ? 'selected' : ''}`,
-        html: `<div class="marker-icon bg-white p-1 rounded-full shadow-lg ${selected ? 'ring-2 ring-primary-500' : ''}">
-                <div class="icon-wrapper text-${getCategoryColor(category)}">
-                  ${getCategoryIconSvg(category)}
-                </div>
-              </div>`,
-        iconSize: [32, 32],
-        iconAnchor: [16, 32],
-        popupAnchor: [0, -32]
-      });
-    };
-
-    const newMarkers: {[key: string]: L.DivIcon} = {};
-    
-    issues.forEach(issue => {
-      const isSelected = issue.id === selectedId;
-      newMarkers[`${issue.id}-${issue.category}-${isSelected}`] = createMarkerIcon(issue.category, isSelected);
-    });
-    
-    setMarkers(newMarkers);
-  }, [issues, selectedId]);
+  const userIssues = useMemo(() => 
+    issues.filter(issue => issue.userId === user?.id),
+    [issues, user?.id]
+  );
 
   const getCategoryColor = (category: string) => {
     switch(category) {
@@ -78,6 +56,29 @@ const IssueMap: React.FC<IssueMapProps> = ({
     }
   };
 
+  const createMarkerIcon = (category: string, selected: boolean = false) => {
+    return L.divIcon({
+      className: `issue-marker issue-marker-${category} ${selected ? 'selected' : ''}`,
+      html: `<div class="marker-icon bg-white p-1 rounded-full shadow-lg ${selected ? 'ring-2 ring-primary-500' : ''}">
+              <div class="icon-wrapper text-${getCategoryColor(category)}">
+                ${getCategoryIconSvg(category)}
+              </div>
+            </div>`,
+      iconSize: [32, 32],
+      iconAnchor: [16, 32],
+      popupAnchor: [0, -32]
+    });
+  };
+
+  const markers = useMemo(() => {
+    const newMarkers: {[key: string]: L.DivIcon} = {};
+    userIssues.forEach(issue => {
+      const isSelected = issue.id === selectedId;
+      newMarkers[`${issue.id}-${issue.category}-${isSelected}`] = createMarkerIcon(issue.category, isSelected);
+    });
+    return newMarkers;
+  }, [userIssues, selectedId]);
+
   return (
     <div style={{ height }}>
       <MapContainer center={center} zoom={zoom} style={{ height: '100%', width: '100%' }}>
@@ -85,6 +86,13 @@ const IssueMap: React.FC<IssueMapProps> = ({
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
+        
+        {customMarkers.map((marker, index) => (
+          <Marker 
+            key={`custom-${index}`}
+            position={marker.position}
+          />
+        ))}
         
         {userIssues.map(issue => {
           const markerKey = `${issue.id}-${issue.category}-${issue.id === selectedId}`;

@@ -9,7 +9,7 @@ const Footer = () => {
           <div>
             <div className="flex items-center">
               <MapPin className="h-8 w-8 text-primary-500" />
-              <span className="ml-2 text-xl font-bold">Smart Dakar</span>
+              <span className="ml-2 text-xl font-bold">GooxAlert</span>
             </div>
             <p className="mt-4 text-sm text-gray-300">
               Une plateforme citoyenne pour signaler et suivre les problèmes d'infrastructure urbaine à Dakar.
@@ -85,7 +85,7 @@ const Footer = () => {
         
         <div className="mt-8 border-t border-gray-700 pt-8 flex flex-col md:flex-row justify-between items-center">
           <p className="text-sm text-gray-400">
-            &copy; {new Date().getFullYear()} Smart Dakar. Tous droits réservés.
+            &copy; {new Date().getFullYear()} GooxAlert. Tous droits réservés.
           </p>
           <div className="mt-4 md:mt-0 flex space-x-6">
             <a href="#" className="text-gray-400 hover:text-primary-500">

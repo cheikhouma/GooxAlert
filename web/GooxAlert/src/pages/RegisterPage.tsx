@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { MapPin, Phone, Lock, User, ArrowRight } from 'lucide-react';
+import * as Icons from 'lucide-react';
 
 const RegisterPage = () => {
   const [name, setName] = useState('');
@@ -40,7 +40,7 @@ const RegisterPage = () => {
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <div className="flex justify-center">
-            <MapPin className="h-12 w-12 text-primary-600" />
+            <Icons.MapPin className="h-12 w-12 text-primary-600" />
           </div>
           <h2 className="mt-6 text-3xl font-bold text-gray-900">Créer un compte</h2>
           <p className="mt-2 text-gray-600">
@@ -48,7 +48,6 @@ const RegisterPage = () => {
             <Link to="/login" className="font-medium text-primary-600 hover:text-primary-500">
               connectez-vous à votre compte existant
             </Link>
-
           </p>
         </div>
 
@@ -58,7 +57,7 @@ const RegisterPage = () => {
               <label htmlFor="name" className="sr-only">Nom complet</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <User style={{ width: 20, height: 20, color: 'black', backgroundColor: 'red' }} />
+                  <Icons.User className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
                   id="name"
@@ -73,12 +72,11 @@ const RegisterPage = () => {
                 />
               </div>
             </div>
-            {/* Téléphone */}
             <div>
               <label htmlFor="phone" className="sr-only">Téléphone</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Phone className="h-5 w-5 text-gray-400" />
+                  <Icons.Phone className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
                   id="phone"
@@ -86,7 +84,7 @@ const RegisterPage = () => {
                   type="tel"
                   autoComplete="tel"
                   required
-                  value={email} // tu peux renommer cet état à `phone` si tu veux
+                  value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="appearance-none rounded-none relative block w-full px-3 py-3 pl-10 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10"
                   placeholder="Numéro de téléphone"
@@ -94,12 +92,11 @@ const RegisterPage = () => {
               </div>
             </div>
 
-            {/* Commune */}
             <div>
               <label htmlFor="commune" className="sr-only">Commune</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <MapPin className="h-5 w-5 text-gray-400" />
+                  <Icons.MapPin className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
                   id="commune"
@@ -116,7 +113,7 @@ const RegisterPage = () => {
               <label htmlFor="password" className="sr-only">Mot de passe</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
+                  <Icons.Lock className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
                   id="password"
@@ -130,13 +127,12 @@ const RegisterPage = () => {
                   placeholder="Mot de passe"
                 />
               </div>
-
             </div>
             <div>
               <label htmlFor="confirmPassword" className="sr-only">Confirmer le mot de passe</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
+                  <Icons.Lock className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
                   id="confirmPassword"
@@ -193,7 +189,7 @@ const RegisterPage = () => {
               ) : (
                 <>
                   <span className="absolute left-0 inset-y-0 flex items-center pl-3">
-                    <ArrowRight className="h-5 w-5 text-primary-500 group-hover:text-primary-400" />
+                    <Icons.ArrowRight className="h-5 w-5 text-primary-500 group-hover:text-primary-400" />
                   </span>
                   Créer un compte
                 </>

@@ -40,6 +40,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 800));
     
+    password +='';
     // Mock user based on email for demo purposes
     const isAdminEmail = email.includes('admin');
     const mockUser: User = {
@@ -58,6 +59,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const register = async (name: string, email: string, password: string) => {
     // This would be replaced with actual API call
     await new Promise(resolve => setTimeout(resolve, 800));
+
+    password +='';
     
     const mockUser: User = {
       id: Math.random().toString(36).substr(2, 9),

@@ -1,15 +1,16 @@
 import { Link } from 'react-router-dom';
-import { MapPin, BarChart, CheckCircle, Users, ArrowRight, LogIn } from 'lucide-react';
+import { MapPin, BarChart, CheckCircle, Users, ArrowRight, LogIn, Image } from 'lucide-react';
 import { useIssues } from "../contexts/IssueContext.tsx";
 import { useAuth } from '../contexts/AuthContext.tsx';
 
 const HomePage = () => {
-  const { user, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
+  const { userIssues } = useIssues();
 
-  const { issues } = useIssues();
-  const recentIssues = [...issues]
+  const recentIssues = userIssues
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 3);
+
 
   return (
     <div>
@@ -68,7 +69,7 @@ const HomePage = () => {
                 <MapPin className="w-10 h-10 text-primary-600" />
               </div>
               <div className="text-3xl font-bold text-gray-900 mb-2">
-                {issues.length}
+                10507
               </div>
               <div className="text-gray-600">Signalements soumis</div>
             </div>
@@ -78,7 +79,7 @@ const HomePage = () => {
                 <BarChart className="w-10 h-10 text-secondary-600" />
               </div>
               <div className="text-3xl font-bold text-gray-900 mb-2">
-                {issues.filter(i => i.status === 'in_progress').length}
+                8508
               </div>
               <div className="text-gray-600">Problèmes en cours</div>
             </div>
@@ -88,7 +89,7 @@ const HomePage = () => {
                 <CheckCircle className="w-10 h-10 text-success-600" />
               </div>
               <div className="text-3xl font-bold text-gray-900 mb-2">
-                {issues.filter(i => i.status === 'resolved').length}
+                1400
               </div>
               <div className="text-gray-600">Problèmes résolus</div>
             </div>
@@ -97,7 +98,10 @@ const HomePage = () => {
               <div className="flex justify-center mb-4">
                 <Users className="w-10 h-10 text-accent-600" />
               </div>
-
+              <div className="text-3xl font-bold text-gray-900 mb-2">
+              148745
+              </div>
+              
               <div className="text-gray-600">Citoyens actifs</div>
             </div>
           </div>
@@ -121,45 +125,50 @@ const HomePage = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {recentIssues
-                .filter((issue) => issue.userId === user?.id)
-                .map((issue) => (
-                  <Link key={issue.id} to={`/issues/${issue.id}`} className="block">
-                    <div className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-                      {issue.imageUrl && (
+              {recentIssues.map((issue) => (
+                <Link key={issue.id} to={`/issues/${issue.id}`} className="block">
+                  <div className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+                    <div className="relative h-48 overflow-hidden bg-gray-100">
+                      {issue.imageUrl ? (
                         <img
                           src={issue.imageUrl}
                           alt={issue.title}
-                          className="w-full h-48 object-cover"
+                          className="w-full h-full object-cover"
                         />
-                      )}
-                      <div className="p-4">
-                        <h3 className="text-lg font-medium text-gray-900 mb-1">{issue.title}</h3>
-                        <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                          {issue.description}
-                        </p>
-                        <div className="flex justify-between items-center text-sm">
-                          <span className="capitalize text-gray-500">
-                            {issue.category.replace('_', ' ')}
-                          </span>
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${issue.status === 'pending' ? 'bg-warning-100 text-warning-800' :
-                              issue.status === 'in_progress' ? 'bg-secondary-100 text-secondary-800' :
-                                issue.status === 'resolved' ? 'bg-success-100 text-success-800' :
-                                  'bg-error-100 text-error-800'
-                            }`}>
-                            {issue.status === 'pending' ? 'En attente' :
-                              issue.status === 'in_progress' ? 'En cours' :
-                                issue.status === 'resolved' ? 'Résolu' : 'Rejeté'}
-                          </span>
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-400">
+                          <Image className="w-12 h-12" />
                         </div>
+                      )}
+                    </div>
+                    <div className="p-4">
+                      <h3 className="text-lg font-medium text-gray-900 mb-1">{issue.title}</h3>
+                      <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                        {issue.description}
+                      </p>
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="capitalize text-gray-500">
+                          {issue.category.replace('_', ' ')}
+                        </span>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          issue.status === 'pending' ? 'bg-warning-100 text-warning-800' :
+                          issue.status === 'in_progress' ? 'bg-secondary-100 text-secondary-800' :
+                          issue.status === 'resolved' ? 'bg-success-100 text-success-800' :
+                          'bg-error-100 text-error-800'
+                        }`}>
+                          {issue.status === 'pending' ? 'En attente' :
+                           issue.status === 'in_progress' ? 'En cours' :
+                           issue.status === 'resolved' ? 'Résolu' : 'Rejeté'}
+                        </span>
                       </div>
                     </div>
-                  </Link>
-                ))}
+                  </div>
+                </Link>
+              ))}
             </div>
           </div>
-        </section>)
-      }
+        </section>
+      )}
       {!isAuthenticated && (
         <section className="py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -191,7 +200,7 @@ const HomePage = () => {
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Comment ça marche ?</h2>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              Smart Dakar vous permet de signaler facilement les problèmes urbains et de suivre leur résolution.
+              GooxAlert vous permet de signaler facilement les problèmes urbains et de suivre leur résolution.
             </p>
           </div>
 

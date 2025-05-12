@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, MapPin, } from 'lucide-react';
+import { Calendar, MapPin, Image } from 'lucide-react';
 import { Issue } from '../../types';
 import { formatDate } from '../../utils/formatters';
 import StatusBadge from './StatusBadge';
@@ -18,18 +18,22 @@ const IssueCard: React.FC<IssueCardProps> = ({ issue }) => {
   return (
     <Link to={`/issues/${issue.id}`} className="block">
       <div className="card hover:shadow-lg transition-shadow duration-300">
-        {issue.imageUrl && (
-          <div className="relative h-48 overflow-hidden">
+        <div className="relative h-48 overflow-hidden bg-gray-100">
+          {issue.imageUrl ? (
             <img 
               src={issue.imageUrl} 
               alt={issue.title} 
               className="w-full h-full object-cover"
             />
-            <div className="absolute top-2 right-2">
-              <StatusBadge status={issue.status} />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-gray-400">
+              <Image className="w-12 h-12" />
             </div>
+          )}
+          <div className="absolute top-2 right-2">
+            <StatusBadge status={issue.status} />
           </div>
-        )}
+        </div>
         
         <div className="p-4">
           <div className="flex items-center mb-2">

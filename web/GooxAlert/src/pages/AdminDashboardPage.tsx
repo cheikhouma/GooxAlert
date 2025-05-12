@@ -39,7 +39,7 @@ const AdminDashboardPage = () => {
         <div className="w-64 bg-gray-800 h-screen fixed">
           <div className="flex items-center justify-center h-16 bg-gray-900">
             <MapPin className="h-8 w-8 text-primary-500" />
-            <span className="ml-2 text-white font-bold">Admin Smart Dakar</span>
+            <span className="ml-2 text-white font-bold">Admin GooxAlert</span>
           </div>
           
           <nav className="mt-6">

@@ -1,41 +1,58 @@
-import React, {createContext, useEffect, useState} from 'react';
-import {Issue, IssueStatus} from '../types';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useAuth } from './AuthContext';
+import { Issue } from '../types';
 import {mockIssues} from '../data/mockIssues';
-// Helper for the AuthContext
-import {useAuth} from './AuthContext';
 
 interface IssueContextType {
   issues: Issue[];
   userIssues: Issue[];
   getIssueById: (id: string) => Issue | undefined;
   addIssue: (issue: Omit<Issue, 'id' | 'createdAt' | 'updatedAt' | 'status'>) => Promise<Issue>;
-  updateIssueStatus: (id: string, status: IssueStatus) => Promise<void>;
+  updateIssueStatus: (id: string, status: Issue['status']) => Promise<void>;
+  loading: boolean;
+  error: string | null;
+  getIssue: (id: string) => Promise<Issue>;
+  updateIssue: (id: string, issueData: Partial<Issue>) => Promise<void>;
+  deleteIssue: (id: string) => Promise<void>;
+  refreshIssues: () => Promise<void>;
 }
 
 const IssueContext = createContext<IssueContextType | undefined>(undefined);
-import {useContext} from "react";
 
 export const useIssues = () => {
   const context = useContext(IssueContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useIssues must be used within an IssueProvider');
   }
   return context;
 };
+
 export const IssueProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [issues, setIssues] = useState<Issue[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
 
-  useEffect(() => {
-    // In a real app, this would fetch from an API
-    const storedIssues = localStorage.getItem('smartDakarIssues');
-    if (storedIssues) {
-      setIssues(JSON.parse(storedIssues));
-    } else {
+  const fetchIssues = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      // Pour le développement, on utilise les données mockées
+      
       setIssues(mockIssues);
-      localStorage.setItem('smartDakarIssues', JSON.stringify(mockIssues));
+    } catch (err) {
+      setError('Erreur lors du chargement des signalements');
+      console.error('Erreur lors du chargement des signalements:', err);
+    } finally {
+      setLoading(false);
     }
-  }, []);
+  };
+
+  useEffect(() => {
+    if (user) {
+      fetchIssues();
+    }
+  }, [user]);
 
   // Get issues created by the current user
   const userIssues = user 
@@ -53,29 +70,58 @@ export const IssueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       createdAt: now,
       updatedAt: now,
       status: 'pending',
-      ...issueData,
-      
+      ...issueData
     };
 
-    const updatedIssues = [...issues, newIssue];
-    setIssues(updatedIssues);
-    localStorage.setItem('smartDakarIssues', JSON.stringify(updatedIssues));
+    setIssues(prev => [...prev, newIssue]);
     return newIssue;
   };
 
-  const updateIssueStatus = async (id: string, status: IssueStatus) => {
-    const updatedIssues = issues.map(issue => 
+  const updateIssueStatus = async (id: string, status: Issue['status']) => {
+    setIssues(prev => prev.map(issue => 
       issue.id === id 
         ? { ...issue, status, updatedAt: new Date().toISOString() } 
         : issue
-    );
-    
-    setIssues(updatedIssues);
-    localStorage.setItem('smartDakarIssues', JSON.stringify(updatedIssues));
+    ));
   };
 
+  const getIssue = async (id: string): Promise<Issue> => {
+    try {
+      setError(null);
+      const issue = issues.find(i => i.id === id);
+      if (!issue) {
+        throw new Error('Signalement non trouvé');
+      }
+      return issue;
+    } catch (err) {
+      setError('Erreur lors de la récupération du signalement');
+      throw err;
+    }
+  };
 
+  const updateIssue = async (id: string, issueData: Partial<Issue>) => {
+    try {
+      setError(null);
+      setIssues(prev => prev.map(issue => 
+        issue.id === id 
+          ? { ...issue, ...issueData, updatedAt: new Date().toISOString() }
+          : issue
+      ));
+    } catch (err) {
+      setError('Erreur lors de la modification du signalement');
+      throw err;
+    }
+  };
 
+  const deleteIssue = async (id: string) => {
+    try {
+      setError(null);
+      setIssues(prev => prev.filter(issue => issue.id !== id));
+    } catch (err) {
+      setError('Erreur lors de la suppression du signalement');
+      throw err;
+    }
+  };
 
   const value = {
     issues,
@@ -83,6 +129,12 @@ export const IssueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     getIssueById,
     addIssue,
     updateIssueStatus,
+    loading,
+    error,
+    getIssue,
+    updateIssue,
+    deleteIssue,
+    refreshIssues: fetchIssues
   };
 
   return (
