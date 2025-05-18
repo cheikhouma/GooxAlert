@@ -1,15 +1,17 @@
 import React from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { LogIn } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requireAdmin?: boolean;
+  requiredRole?: 'user' | 'admin';
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requireAdmin = false }) => {
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole }) => {
   const { user, isAuthenticated, isInitialized } = useAuth();
+  const location = useLocation();
 
   if (!isInitialized) {
     return (
@@ -36,8 +38,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requireAdmin 
     );
   }
 
-  if (requireAdmin && user?.role !== 'admin') {
-    return <Navigate to="/dashboard" replace />;
+  if (requiredRole && user?.role !== requiredRole && !(requiredRole === 'user' && user?.role === 'admin')) {
+    return <Navigate to="/" replace />;
   }
 
   return <>{children}</>;

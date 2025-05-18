@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import  { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { MapPin, Menu, X, LogOut, User, Plus, Map, LayoutDashboard } from 'lucide-react';
+import { Menu, X, LogOut, User, Plus, Map, LayoutDashboard } from 'lucide-react';
 
 const Header = () => {
   const { user, isAuthenticated, isAdmin, logout } = useAuth();
@@ -20,7 +20,7 @@ const Header = () => {
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <Link to="/" className="flex-shrink-0 flex items-center">
-              <MapPin className="h-8 w-8 text-primary-600" />
+              <img src="/logo.png" alt="GooxAlert" className="h-8 w-8" />
               <span className="ml-2 text-xl font-bold text-gray-900">GooxAlert</span>
             </Link>
             <nav className="hidden md:ml-6 md:flex md:space-x-8">

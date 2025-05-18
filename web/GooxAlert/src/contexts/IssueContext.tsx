@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 import { Issue } from '../types';
-import {mockIssues} from '../data/mockIssues';
+import { mockIssues } from '../data/mockIssues';
 
 interface IssueContextType {
   issues: Issue[];
@@ -37,12 +37,11 @@ export const IssueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     try {
       setLoading(true);
       setError(null);
-      // Pour le développement, on utilise les données mockées
-      
+      // Utiliser les données mockées au lieu de Supabase
       setIssues(mockIssues);
     } catch (err) {
+      console.error('Error fetching issues:', err);
       setError('Erreur lors du chargement des signalements');
-      console.error('Erreur lors du chargement des signalements:', err);
     } finally {
       setLoading(false);
     }
@@ -64,25 +63,36 @@ export const IssueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const addIssue = async (issueData: Omit<Issue, 'id' | 'createdAt' | 'updatedAt' | 'status'>) => {
-    const now = new Date().toISOString();
-    const newIssue: Issue = {
-      id: Math.random().toString(36).substr(2, 9),
-      createdAt: now,
-      updatedAt: now,
-      status: 'pending',
-      ...issueData
-    };
-
-    setIssues(prev => [...prev, newIssue]);
-    return newIssue;
+    try {
+      setError(null);
+      const newIssue: Issue = {
+        ...issueData,
+        id: Math.random().toString(36).substr(2, 9),
+        status: 'pending',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        userId: user?.id || 'anonymous'
+      };
+      setIssues(prev => [newIssue, ...prev]);
+      return newIssue;
+    } catch (err) {
+      console.error('Error adding issue:', err);
+      setError('Erreur lors de l\'ajout du signalement');
+      throw err;
+    }
   };
 
   const updateIssueStatus = async (id: string, status: Issue['status']) => {
-    setIssues(prev => prev.map(issue => 
-      issue.id === id 
-        ? { ...issue, status, updatedAt: new Date().toISOString() } 
-        : issue
-    ));
+    try {
+      setError(null);
+      setIssues(prev => prev.map(issue =>
+        issue.id === id ? { ...issue, status, updatedAt: new Date().toISOString() } : issue
+      ));
+    } catch (err) {
+      console.error('Error updating issue status:', err);
+      setError('Erreur lors de la mise à jour du statut');
+      throw err;
+    }
   };
 
   const getIssue = async (id: string): Promise<Issue> => {
@@ -123,6 +133,10 @@ export const IssueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
+  const refreshIssues = async () => {
+    await fetchIssues();
+  };
+
   const value = {
     issues,
     userIssues,
@@ -134,7 +148,7 @@ export const IssueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     getIssue,
     updateIssue,
     deleteIssue,
-    refreshIssues: fetchIssues
+    refreshIssues
   };
 
   return (

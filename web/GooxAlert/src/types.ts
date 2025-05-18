@@ -35,7 +35,7 @@ export interface Issue {
 export interface User {
   id: string;
   name: string;
-  email: string;
+  telephone: string;
   avatar?: string;
   role: 'user' | 'admin';
 }

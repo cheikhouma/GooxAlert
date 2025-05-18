@@ -1,37 +1,124 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import * as Icons from 'lucide-react';
+import { Lock, Phone, MapPin, User, ArrowRight } from 'lucide-react';
+import { Input } from '../components/common/Input';
+
+const COMMUNES = [
+  'Dakar',
+  'Guédiawaye',
+  'Pikine',
+  'Rufisque',
+  'Thiès',
+  'Touba',
+  'Saint-Louis',
+  'Kaolack'
+];
 
 const RegisterPage = () => {
   const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const [telephone, setTelephone] = useState('');
+  const [commune, setCommune] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [loading, setLoading] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
 
+  const validateForm = () => {
+    const newErrors: { [key: string]: string } = {};
+
+    if (!name.trim()) {
+      newErrors.name = 'Veuillez entrer votre nom complet';
+    }
+
+    if (!telephone.trim()) {
+      newErrors.telephone = 'Veuillez entrer votre numéro de téléphone';
+    } else if (!/^\+221\s?[0-9]{2}\s?[0-9]{3}\s?[0-9]{2}\s?[0-9]{2}$/.test(telephone)) {
+      newErrors.telephone = 'Veuillez entrer un numéro de téléphone valide au format +221 77 123 45 67';
+    }
+
+    if (!commune) {
+      newErrors.commune = 'Veuillez sélectionner votre commune';
+    }
+
+    if (!password) {
+      newErrors.password = 'Veuillez entrer un mot de passe';
+    } else if (password.length < 6) {
+      newErrors.password = 'Le mot de passe doit contenir au moins 6 caractères';
+    }
+
+    if (!confirmPassword) {
+      newErrors.confirmPassword = 'Veuillez confirmer votre mot de passe';
+    } else if (password !== confirmPassword) {
+      newErrors.confirmPassword = 'Les mots de passe ne correspondent pas';
+    }
+
+    const termsCheckbox = document.getElementById('terms') as HTMLInputElement;
+    if (!termsCheckbox?.checked) {
+      newErrors.terms = 'Veuillez accepter les conditions d\'utilisation';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError('');
-
-    if (password !== confirmPassword) {
-      setError('Les mots de passe ne correspondent pas.');
+    
+    if (!validateForm()) {
       return;
     }
 
     setLoading(true);
+    setErrors({});
 
     try {
-      await register(name, email, password);
-      navigate('/dashboard');
+      await register(name, telephone, password);
+      navigate('/verify-otp', { state: { telephone } });
     } catch (err) {
       console.error('Registration failed:', err);
-      setError('L\'inscription a échoué. Veuillez réessayer.');
+      setErrors({ submit: 'L\'inscription a échoué. Veuillez réessayer.' });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleInvalid = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    validateForm();
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
+    }
+
+    switch (name) {
+      case 'name':
+        setName(value);
+        break;
+      case 'telephone':
+        setTelephone(value);
+        break;
+      case 'commune':
+        setCommune(value);
+        break;
+      case 'password':
+        setPassword(value);
+        break;
+      case 'confirmPassword':
+        setConfirmPassword(value);
+        break;
+      case 'terms':
+        const checked = (e.target as HTMLInputElement).checked;
+        if (checked && errors.terms) {
+          setErrors(prev => ({ ...prev, terms: '' }));
+        }
+        break;
     }
   };
 
@@ -40,7 +127,7 @@ const RegisterPage = () => {
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <div className="flex justify-center">
-            <Icons.MapPin className="h-12 w-12 text-primary-600" />
+            <MapPin className="h-12 w-12 text-primary-600" />
           </div>
           <h2 className="mt-6 text-3xl font-bold text-gray-900">Créer un compte</h2>
           <p className="mt-2 text-gray-600">
@@ -51,107 +138,105 @@ const RegisterPage = () => {
           </p>
         </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="rounded-md shadow-sm -space-y-px">
-            <div>
-              <label htmlFor="name" className="sr-only">Nom complet</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Icons.User className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  id="name"
-                  name="name"
-                  type="text"
-                  autoComplete="name"
-                  required
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="appearance-none rounded-none relative block w-full px-3 py-3 pl-10 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10"
-                  placeholder="Nom complet"
-                />
-              </div>
-            </div>
-            <div>
-              <label htmlFor="phone" className="sr-only">Téléphone</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Icons.Phone className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  id="phone"
-                  name="phone"
-                  type="tel"
-                  autoComplete="tel"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="appearance-none rounded-none relative block w-full px-3 py-3 pl-10 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10"
-                  placeholder="Numéro de téléphone"
-                />
-              </div>
-            </div>
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit} onInvalid={handleInvalid} noValidate>
+          <div className="space-y-4">
+            <Input
+              label="Nom complet"
+              name="name"
+              type="text"
+              value={name}
+              onChange={handleInputChange}
+              placeholder="Votre nom complet"
+              icon={User}
+              error={errors.name}
+              required
+            />
 
-            <div>
-              <label htmlFor="commune" className="sr-only">Commune</label>
+            <Input
+              label="Numéro de téléphone"
+              name="telephone"
+              type="tel"
+              value={telephone}
+              onChange={handleInputChange}
+              placeholder="+221 77 123 45 67"
+              icon={Phone}
+              error={errors.telephone}
+              required
+            />
+
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">
+                Commune
+              </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Icons.MapPin className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  id="commune"
+                <MapPin
+                  size={20}
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                />
+                <select
                   name="commune"
-                  type="text"
+                  value={commune}
+                  onChange={handleInputChange}
+                  className={`w-full pl-10 pr-4 py-3 border ${
+                    errors.commune ? 'border-red-300' : 'border-gray-300'
+                  } rounded-md focus:outline-none focus:ring-2 focus:ring-primary-300 appearance-none bg-white`}
                   required
-                  className="appearance-none rounded-none relative block w-full px-3 py-3 pl-10 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10"
-                  placeholder="Commune"
-                />
+                >
+                  <option value="">Sélectionnez votre commune</option>
+                  {COMMUNES.map((commune) => (
+                    <option key={commune} value={commune}>
+                      {commune}
+                    </option>
+                  ))}
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                  <svg
+                    className="h-5 w-5 text-gray-400"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
               </div>
+              {errors.commune && (
+                <p className="text-sm text-red-600">{errors.commune}</p>
+              )}
             </div>
 
-            <div>
-              <label htmlFor="password" className="sr-only">Mot de passe</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Icons.Lock className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="new-password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none rounded-none relative block w-full px-3 py-3 pl-10 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10"
-                  placeholder="Mot de passe"
-                />
-              </div>
-            </div>
-            <div>
-              <label htmlFor="confirmPassword" className="sr-only">Confirmer le mot de passe</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Icons.Lock className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type="password"
-                  autoComplete="new-password"
-                  required
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="appearance-none rounded-none relative block w-full px-3 py-3 pl-10 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10"
-                  placeholder="Confirmer le mot de passe"
-                />
-              </div>
-            </div>
+            <Input
+              label="Mot de passe"
+              name="password"
+              type="password"
+              value={password}
+              onChange={handleInputChange}
+              placeholder="••••••••"
+              icon={Lock}
+              error={errors.password}
+              required
+            />
+
+            <Input
+              label="Confirmer le mot de passe"
+              name="confirmPassword"
+              type="password"
+              value={confirmPassword}
+              onChange={handleInputChange}
+              placeholder="••••••••"
+              icon={Lock}
+              error={errors.confirmPassword}
+              required
+            />
           </div>
 
-          {error && (
-            <div className="text-error-600 text-sm bg-error-50 p-3 rounded-md">
-              {error}
+          {errors.submit && (
+            <div className="text-red-600 text-sm bg-red-50 p-3 rounded-md">
+              {errors.submit}
             </div>
           )}
 
@@ -161,35 +246,60 @@ const RegisterPage = () => {
               name="terms"
               type="checkbox"
               required
-              className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+              onChange={handleInputChange}
+              className={`h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded ${
+                errors.terms ? 'border-red-300' : ''
+              }`}
             />
             <label htmlFor="terms" className="ml-2 block text-sm text-gray-900">
               J'accepte les{' '}
-              <a href="#" className="font-medium text-primary-600 hover:underline">
+              <Link to="/terms" className="font-medium text-primary-600 hover:underline">
                 conditions d'utilisation
-              </a>
+              </Link>
               {' '}et la{' '}
-              <a href="#" className="font-medium text-primary-600 hover:underline">
+              <Link to="/privacy" className="font-medium text-primary-600 hover:underline">
                 politique de confidentialité
-              </a>
+              </Link>
             </label>
           </div>
+          {errors.terms && (
+            <p className="text-sm text-red-600">{errors.terms}</p>
+          )}
 
           <div>
             <button
               type="submit"
               disabled={loading}
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent rounded-md font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+              className="group relative w-full flex justify-center py-3 px-4 border border-transparent rounded-md font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <div className="flex items-center">
-                  <div className="animate-spin mr-2 h-4 w-4 border-t-2 border-b-2 border-white rounded-full"></div>
+                  <svg
+                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
+                  </svg>
                   Création du compte...
                 </div>
               ) : (
                 <>
                   <span className="absolute left-0 inset-y-0 flex items-center pl-3">
-                    <Icons.ArrowRight className="h-5 w-5 text-primary-500 group-hover:text-primary-400" />
+                    <ArrowRight className="h-5 w-5 text-primary-500 group-hover:text-primary-400" />
                   </span>
                   Créer un compte
                 </>

@@ -19,6 +19,9 @@ import NotFoundPage from './pages/NotFoundPage';
 import PrivacyPage from './pages/PrivacyPage';
 import TermsPage from './pages/TermsPage';
 import AboutPage from './pages/AboutPage';
+import OTPVerificationPage from './pages/OTPVerificationPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 
 const App: React.FC = () => {
   return (
@@ -31,6 +34,9 @@ const App: React.FC = () => {
             <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/verify-otp" element={<OTPVerificationPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/privacy" element={<PrivacyPage />} />
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/about" element={<AboutPage />} />
@@ -39,7 +45,7 @@ const App: React.FC = () => {
             <Route
               path="/profile"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredRole="user">
                   <ProfilePage />
                 </ProtectedRoute>
               }
@@ -47,7 +53,7 @@ const App: React.FC = () => {
             <Route
               path="/dashboard"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredRole="user">
                   <DashboardPage />
                 </ProtectedRoute>
               }
@@ -55,7 +61,7 @@ const App: React.FC = () => {
             <Route
               path="/report"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredRole="user">
                   <ReportIssuePage />
                 </ProtectedRoute>
               }
@@ -63,7 +69,7 @@ const App: React.FC = () => {
             <Route
               path="/map"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredRole="user">
                   <IssueMapPage />
                 </ProtectedRoute>
               }
@@ -71,7 +77,7 @@ const App: React.FC = () => {
             <Route
               path="/issues/:id"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredRole="user">
                   <IssueDetailsPage />
                 </ProtectedRoute>
               }
@@ -81,7 +87,7 @@ const App: React.FC = () => {
             <Route
               path="/admin/*"
               element={
-                <ProtectedRoute requireAdmin>
+                <ProtectedRoute requiredRole="admin">
                   <AdminDashboardPage />
                 </ProtectedRoute>
               }

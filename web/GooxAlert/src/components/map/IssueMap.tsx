@@ -7,7 +7,6 @@ import CategoryIcon from '../issues/CategoryIcon';
 import StatusBadge from '../issues/StatusBadge';
 import { useAuth } from '../../contexts/AuthContext';
 
-
 interface IssueMapProps {
   issues?: Issue[];
   center?: [number, number];
@@ -15,6 +14,7 @@ interface IssueMapProps {
   height?: string;
   selectedId?: string;
   customMarkers?: Array<{ position: [number, number] }>;
+  showAllIssues?: boolean;
 }
 
 const IssueMap: React.FC<IssueMapProps> = ({ 
@@ -23,12 +23,13 @@ const IssueMap: React.FC<IssueMapProps> = ({
   zoom = 12,
   height = '500px',
   selectedId,
-  customMarkers = []
+  customMarkers = [],
+  showAllIssues = false
 }) => {
   const { user } = useAuth(); 
-  const userIssues = useMemo(() => 
-    issues.filter(issue => issue.userId === user?.id),
-    [issues, user?.id]
+  const displayIssues = useMemo(() => 
+    showAllIssues ? issues : issues.filter(issue => issue.userId === user?.id),
+    [issues, user?.id, showAllIssues]
   );
 
   const getCategoryColor = (category: string) => {
@@ -72,12 +73,12 @@ const IssueMap: React.FC<IssueMapProps> = ({
 
   const markers = useMemo(() => {
     const newMarkers: {[key: string]: L.DivIcon} = {};
-    userIssues.forEach(issue => {
+    displayIssues.forEach(issue => {
       const isSelected = issue.id === selectedId;
       newMarkers[`${issue.id}-${issue.category}-${isSelected}`] = createMarkerIcon(issue.category, isSelected);
     });
     return newMarkers;
-  }, [userIssues, selectedId]);
+  }, [displayIssues, selectedId]);
 
   return (
     <div style={{ height }}>
@@ -94,7 +95,7 @@ const IssueMap: React.FC<IssueMapProps> = ({
           />
         ))}
         
-        {userIssues.map(issue => {
+        {displayIssues.map(issue => {
           const markerKey = `${issue.id}-${issue.category}-${issue.id === selectedId}`;
           if (markers[markerKey]) {
             return (

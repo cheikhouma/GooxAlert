@@ -43,7 +43,7 @@ const DashboardPage = () => {
               />
               <div className="ml-4">
                 <h2 className="text-xl font-bold text-gray-900">{user.name}</h2>
-                <p className="text-gray-600">{user.email}</p>
+                <p className="text-gray-600">{user.telephone}</p>
               </div>
             </div>
             
@@ -177,7 +177,7 @@ const DashboardPage = () => {
                     type="email"
                     id="email"
                     className="input"
-                    defaultValue={user.email}
+                    defaultValue={user.telephone}
                     placeholder="votre.email@example.com"
                   />
                 </div>
@@ -198,29 +198,7 @@ const DashboardPage = () => {
                       </label>
                     </div>
                     
-                    <div className="flex items-center">
-                      <input
-                        id="notify-comments"
-                        type="checkbox"
-                        className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                        defaultChecked
-                      />
-                      <label htmlFor="notify-comments" className="ml-2 block text-sm text-gray-700">
-                        Recevoir des notifications pour les nouveaux commentaires
-                      </label>
-                    </div>
-                    
-                    <div className="flex items-center">
-                      <input
-                        id="notify-area"
-                        type="checkbox"
-                        className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                        defaultChecked
-                      />
-                      <label htmlFor="notify-area" className="ml-2 block text-sm text-gray-700">
-                        Recevoir des alertes sur les nouveaux problèmes à proximité
-                      </label>
-                    </div>
+                   
                   </div>
                 </div>
                 

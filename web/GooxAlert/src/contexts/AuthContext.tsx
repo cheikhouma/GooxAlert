@@ -6,8 +6,8 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isAdmin: boolean;
   isInitialized: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
+  login: (telephone: string, password: string) => Promise<void>;
+  register: (name: string, telephone: string, password: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -35,20 +35,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   // Mock login function
-  const login = async (email: string, password: string) => {
+  const login = async (telephone: string, password: string) => {
     // This would be replaced with actual API call
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 800));
     
     password +='';
-    // Mock user based on email for demo purposes
-    const isAdminEmail = email.includes('admin');
+    // Mock user based on telephone for demo purposes
+    const isAdminPhone = telephone.includes('987');
     const mockUser: User = {
       id: '1',
-      name: email.split('@')[0],
-      email,
-      role: isAdminEmail ? 'admin' : 'user',
-      avatar: `https://ui-avatars.com/api/?name=${email.split('@')[0]}&background=10B981&color=fff`
+      name: telephone.split(' ')[2], // Utilise une partie du numéro comme nom pour la démo
+      telephone,
+      role: isAdminPhone ? 'admin' : 'user',
+      avatar: `https://ui-avatars.com/api/?name=${telephone.split(' ')[2]}&background=10B981&color=fff`
     };
     
     setUser(mockUser);
@@ -56,7 +56,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // Mock register function
-  const register = async (name: string, email: string, password: string) => {
+  const register = async (name: string, telephone: string, password: string) => {
     // This would be replaced with actual API call
     await new Promise(resolve => setTimeout(resolve, 800));
 
@@ -65,7 +65,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const mockUser: User = {
       id: Math.random().toString(36).substr(2, 9),
       name,
-      email,
+      telephone,
       role: 'user',
       avatar: `https://ui-avatars.com/api/?name=${name}&background=10B981&color=fff`
     };

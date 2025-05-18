@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Camera, Save, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const ProfilePage: React.FC = () => {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     name: user?.name || '',
-    email: user?.email || '',
+    telephone: user?.telephone || '',
   });
 
   if (!user) {
@@ -16,12 +18,23 @@ const ProfilePage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implémenter la mise à jour du profil
+    
+    // Mise à jour du profil dans le localStorage
+    const updatedUser = {
+      ...user,
+      name: formData.name,
+      telephone: formData.telephone,
+      avatar: `https://ui-avatars.com/api/?name=${formData.name}&background=10B981&color=fff`
+    };
+    
+    localStorage.setItem('smartDakarUser', JSON.stringify(updatedUser));
+    window.location.reload(); // Recharger la page pour mettre à jour le contexte
     setIsEditing(false);
   };
 
   const handleLogout = () => {
     logout();
+    navigate('/');
   };
 
   return (
@@ -62,18 +75,20 @@ const ProfilePage: React.FC = () => {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                  required
                 />
               </div>
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                  Email
+                <label htmlFor="telephone" className="block text-sm font-medium text-gray-700">
+                  Numéro de téléphone
                 </label>
                 <input
-                  type="email"
-                  id="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  type="tel"
+                  id="telephone"
+                  value={formData.telephone}
+                  onChange={(e) => setFormData({ ...formData, telephone: e.target.value })}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                  required
                 />
               </div>
               <div className="flex justify-end space-x-4">
@@ -98,9 +113,9 @@ const ProfilePage: React.FC = () => {
             <div className="space-y-6">
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">{user.name}</h1>
-                <p className="text-gray-500">{user.email}</p>
+                <p className="text-gray-500">{user.telephone}</p>
                 <p className="mt-2 text-sm text-gray-600">
-                  Rôle : <span className="font-medium capitalize">{user.role}</span>
+                  Rôle : <span className="font-medium capitalize">{user.role === 'admin' ? 'Administrateur' : 'Utilisateur'}</span>
                 </p>
               </div>
               <div className="flex space-x-4">
