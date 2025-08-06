@@ -182,12 +182,6 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_USER_MODEL = 'authentification.User'
 
-#  For twilio
-
-# settings.py (si tu n'utilises pas dotenv)
-TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID', 'AC4032a80e2c6e259fcf2ba8c8d607b8a0')
-TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN', 'f483dd52ff5256c685bc512d5034e79e')
-TWILIO_PHONE_NUMBER = os.getenv('TWILIO_PHONE_NUMBER', '+19134047029')
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
