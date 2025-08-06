@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Phone, ArrowLeft } from 'lucide-react';
 import { Input } from '../components/common/Input';
+import { Button } from '../components/common/Button';
+import { checkPhone } from '../services/authService';
+import { validatePhone } from '../utils/validation';
 
 const ForgotPasswordPage = () => {
   const [telephone, setTelephone] = useState('');
@@ -14,8 +17,8 @@ const ForgotPasswordPage = () => {
 
     if (!telephone.trim()) {
       newErrors.telephone = 'Veuillez entrer votre numéro de téléphone';
-    } else if (!/^\+221\s?[0-9]{2}\s?[0-9]{3}\s?[0-9]{2}\s?[0-9]{2}$/.test(telephone)) {
-      newErrors.telephone = 'Veuillez entrer un numéro de téléphone valide au format +221 77 123 45 67';
+    } else if (!validatePhone(telephone)) {
+      newErrors.telephone = 'Veuillez entrer un numéro valide, exemple : +221 77 123 45 67 ou 771234567';
     }
 
     setErrors(newErrors);
@@ -33,121 +36,99 @@ const ForgotPasswordPage = () => {
     setErrors({});
 
     try {
-      // TODO: Implémenter l'appel API pour la réinitialisation du mot de passe
-      // Simuler un délai de réponse
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      // Rediriger vers la page OTP avec le numéro de téléphone
-      navigate('/verify-otp', { 
-        state: { 
-          telephone,
-          isPasswordReset: true 
-        } 
-      });
+      // Standardiser le numéro de téléphone
+      const cleanPhone = telephone.replace(/\s+/g, '');
+      let standardizedPhone = cleanPhone;
+
+      // Si numéro local commençant par 7x et 9 chiffres sans +221
+      if (/^0?(75|76|77|78|70)[0-9]{7}$/.test(cleanPhone)) {
+        standardizedPhone = `+221${cleanPhone.replace(/^0/, '')}`;
+      }
+
+      const result = await checkPhone(standardizedPhone);
+      
+      if (result.status === "success") {
+        navigate('/otp-verification', { 
+          state: { 
+            telephone: standardizedPhone,
+            isPasswordReset: true 
+          } 
+        });
+      } else {
+        if (result.message) {
+          if (result.message.includes('existe pas')) {
+            setErrors({ telephone: 'Aucun compte associé à ce numéro de téléphone' });
+          } else {
+            setErrors({ submit: result.message });
+          }
+        } else {
+          setErrors({ submit: 'Une erreur est survenue. Veuillez réessayer.' });
+        }
+      }
     } catch (err) {
       console.error('Password reset request failed:', err);
-      setErrors({ submit: 'Une erreur est survenue. Veuillez réessayer.' });
+      if (err instanceof Error) {
+        if (err.message.includes('Network Error')) {
+          setErrors({ submit: 'Erreur de connexion. Veuillez vérifier votre connexion internet.' });
+        } else {
+          setErrors({ submit: err.message });
+        }
+      } else {
+        setErrors({ submit: 'Une erreur inattendue est survenue. Veuillez réessayer.' });
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
-    }
-
-    if (name === 'telephone') {
-      setTelephone(value);
-    }
-  };
-
-  const handleInvalid = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    validateForm();
-  };
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div className="text-center">
-          <div className="flex justify-center">
-            <Phone className="h-12 w-12 text-primary-600" />
-          </div>
-          <h2 className="mt-6 text-3xl font-bold text-gray-900">Mot de passe oublié</h2>
-          <p className="mt-2 text-gray-600">
-            Entrez votre numéro de téléphone pour recevoir un code de réinitialisation
-          </p>
+    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md mx-auto">
+        <div className="mb-8">
+          <Button
+            variant="ghost"
+            leftIcon={<ArrowLeft className="h-5 w-5" />}
+            onClick={() => navigate('/login')}
+          >
+            Retour à la connexion
+          </Button>
         </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit} onInvalid={handleInvalid} noValidate>
-          <div className="space-y-4">
+        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+          <div className="text-center">
+            <Phone className="mx-auto h-12 w-12 text-primary-600" />
+            <h2 className="mt-6 text-2xl font-bold text-gray-900">Mot de passe oublié</h2>
+            <p className="mt-2 text-gray-600">
+              Entrez votre numéro de téléphone pour recevoir un code de réinitialisation
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="mt-8 space-y-6">
             <Input
               label="Numéro de téléphone"
-              name="telephone"
               type="tel"
               value={telephone}
-              onChange={handleInputChange}
+              onChange={(e) => setTelephone(e.target.value)}
               placeholder="+221 77 123 45 67"
               icon={Phone}
               error={errors.telephone}
               required
             />
-          </div>
 
-          {errors.submit && (
-            <div className="text-red-600 text-sm bg-red-50 p-3 rounded-md">
-              {errors.submit}
-            </div>
-          )}
+            {errors.submit && (
+              <p className="text-sm text-red-600">{errors.submit}</p>
+            )}
 
-          <div>
-            <button
+            <Button
               type="submit"
-              disabled={loading}
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent rounded-md font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              variant="primary"
+              fullWidth
+              isLoading={loading}
             >
-              {loading ? (
-                <div className="flex items-center">
-                  <svg
-                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    />
-                  </svg>
-                  Envoi en cours...
-                </div>
-              ) : (
-                'Envoyer le code'
-              )}
-            </button>
-          </div>
-
-          <div className="text-center">
-            <Link
-              to="/login"
-              className="inline-flex items-center text-sm font-medium text-primary-600 hover:text-primary-500"
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Retour à la connexion
-            </Link>
-          </div>
-        </form>
+              Envoyer le code
+            </Button>
+          </form>
+        </div>
       </div>
     </div>
   );

@@ -4,11 +4,12 @@ import { useIssues } from "../contexts/IssueContext.tsx";
 import { useAuth } from '../contexts/AuthContext.tsx';
 
 const HomePage = () => {
-  const { isAuthenticated } = useAuth();
+
+  const { isAuthenticated , user} = useAuth();
   const { userIssues } = useIssues();
 
   const recentIssues = userIssues
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     .slice(0, 3);
 
 
@@ -19,14 +20,23 @@ const HomePage = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
           <div className="md:w-2/3">
             <h1 className="text-4xl sm:text-5xl font-bold mb-4 leading-tight">
-              Améliorez Dakar ensemble
+                    {isAuthenticated ? (
+                      <span>
+
+                        Améliorez {user?.commune} ensemble
+                      </span>
+                    ):(
+                      <span>
+                        Améliorez votre ensemble
+                      </span>            
+                    )}
             </h1>
             <p className="text-xl mb-8 text-primary-50">
               Signalez les problèmes urbains, suivez leur résolution et contribuez à l'amélioration de votre cadre de vie.
             </p>
             <div className="flex flex-wrap gap-4">
               <Link
-                to="/report"
+                to="/signaler"
                 className="inline-flex items-center bg-white text-primary-700 hover:bg-primary-50 px-6 py-3 rounded-lg font-medium shadow-lg transition-colors"
               >
                 <MapPin className="w-5 h-5 mr-2" />
@@ -129,9 +139,9 @@ const HomePage = () => {
                 <Link key={issue.id} to={`/issues/${issue.id}`} className="block">
                   <div className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
                     <div className="relative h-48 overflow-hidden bg-gray-100">
-                      {issue.imageUrl ? (
+                      {issue.image_url ? (
                         <img
-                          src={issue.imageUrl}
+                          src={issue.image_url}
                           alt={issue.title}
                           className="w-full h-full object-cover"
                         />
@@ -151,14 +161,14 @@ const HomePage = () => {
                           {issue.category.replace('_', ' ')}
                         </span>
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          issue.status === 'pending' ? 'bg-warning-100 text-warning-800' :
-                          issue.status === 'in_progress' ? 'bg-secondary-100 text-secondary-800' :
-                          issue.status === 'resolved' ? 'bg-success-100 text-success-800' :
+                          issue.status === 'en_attente' ? 'bg-warning-100 text-warning-800' :
+                          issue.status === 'en_cours' ? 'bg-secondary-100 text-secondary-800' :
+                          issue.status === 'resolu' ? 'bg-success-100 text-success-800' :
                           'bg-error-100 text-error-800'
                         }`}>
-                          {issue.status === 'pending' ? 'En attente' :
-                           issue.status === 'in_progress' ? 'En cours' :
-                           issue.status === 'resolved' ? 'Résolu' : 'Rejeté'}
+                          {issue.status === 'en_attente' ? 'En attente' :
+                           issue.status === 'en_cours' ? 'En cours' :
+                           issue.status === 'resolu' ? 'Résolu' : 'Rejeté'}
                         </span>
                       </div>
                     </div>
@@ -254,7 +264,7 @@ const HomePage = () => {
                 Créer un compte
               </Link>
               <Link
-                to="/report"
+                to="/signaler"
                 className="inline-flex items-center bg-primary-700 text-white hover:bg-primary-800 px-6 py-3 rounded-lg font-medium border border-primary-500 transition-colors"
               >
                 Signaler un problème

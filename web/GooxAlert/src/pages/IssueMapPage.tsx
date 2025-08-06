@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import IssueMap from '../components/map/IssueMap';
-import IssueList from '../components/issues/IssueList';
+import SignalementList from '../components/issues/SignalementList';
 import { MapPin, List, LogIn } from 'lucide-react';
 import { useIssues } from '../contexts/IssueContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Link } from 'react-router-dom';
 
 const IssueMapPage = () => {
-  const { issues } = useIssues();
+  const { issues, loading, error } = useIssues();
   const { user } = useAuth();
   const [view, setView] = useState<'map' | 'list'>('map');
 
@@ -25,6 +25,28 @@ const IssueMapPage = () => {
         >
           Se connecter
         </Link>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-12 text-center">
+        <div className="text-red-500 mb-4">Une erreur est survenue lors du chargement des signalements</div>
+        <button 
+          onClick={() => window.location.reload()} 
+          className="text-primary-600 hover:text-primary-700"
+        >
+          Réessayer
+        </button>
       </div>
     );
   }
@@ -74,7 +96,11 @@ const IssueMapPage = () => {
           <IssueMap issues={issues} height="600px" />
         </div>
       ) : (
-        <IssueList issues={issues} title="Mes signalements" onlyUserIssues />
+        <SignalementList 
+          signalements={issues} 
+          title="Tous les signalements" 
+          showFilters={true}
+        />
       )}
     </div>
   );

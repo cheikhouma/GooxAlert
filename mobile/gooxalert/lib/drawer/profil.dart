@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:gooxalert/models/signalements.dart';
+import 'package:gooxalert/models/user.dart';
+import 'package:gooxalert/services/auth_services.dart';
 import 'package:latlong2/latlong.dart';
 import '../navigation/signalement_detail.dart';
 import 'edit_profil.dart';
@@ -8,16 +11,21 @@ class ProfilPage extends StatefulWidget {
   _ProfilPageState createState() => _ProfilPageState();
 }
 
-class _ProfilPageState extends State<ProfilPage> with SingleTickerProviderStateMixin {
+class _ProfilPageState extends State<ProfilPage>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
+  UserModel? _user;
+  List<SignalementModel>? _signalements;
 
   final List<Map<String, dynamic>> myReports = [
     {
       "category": "Lumière",
       "title": "Lampadaire cassé",
-      "description": "Le lampadaire au coin de la rue ne fonctionne plus depuis deux semaines, créant une zone sombre...",
-      "image": "https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=400&q=80",
+      "description":
+          "Le lampadaire au coin de la rue ne fonctionne plus depuis deux semaines, créant une zone sombre...",
+      "image":
+          "https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=400&q=80",
       "date": "15/11/2023",
       "author": "Moi",
       "status": "En attente",
@@ -27,7 +35,8 @@ class _ProfilPageState extends State<ProfilPage> with SingleTickerProviderStateM
       "category": "Voirie",
       "title": "Nid de poule",
       "description": "Un nid de poule dangereux sur la route principale.",
-      "image": "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80",
+      "image":
+          "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80",
       "date": "10/11/2023",
       "author": "Moi",
       "status": "En cours",
@@ -37,7 +46,8 @@ class _ProfilPageState extends State<ProfilPage> with SingleTickerProviderStateM
       "category": "Déchets",
       "title": "Tas d'ordures",
       "description": "Tas d'ordures non ramassé depuis plusieurs jours.",
-      "image": "https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=400&q=80",
+      "image":
+          "https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=400&q=80",
       "date": "12/11/2023",
       "author": "Moi",
       "status": "Résolu",
@@ -48,6 +58,16 @@ class _ProfilPageState extends State<ProfilPage> with SingleTickerProviderStateM
   @override
   void initState() {
     super.initState();
+    AuthService.getCurrentUser().then((user) {
+      setState(() {
+        _user = user;
+      });
+    });
+    AuthService.getUserSignalements().then((signalements) {
+      setState(() {
+        _signalements = signalements;
+      });
+    });
     _controller = AnimationController(
       duration: Duration(milliseconds: 800),
       vsync: this,
@@ -104,14 +124,15 @@ class _ProfilPageState extends State<ProfilPage> with SingleTickerProviderStateM
                     bottomRight: Radius.circular(32),
                   ),
                 ),
-                padding: EdgeInsets.only(top: 20, bottom: 24, left: 24, right: 24),
+                padding:
+                    EdgeInsets.only(top: 20, bottom: 24, left: 24, right: 24),
                 child: Column(
                   children: [
                     Stack(
                       children: [
                         CircleAvatar(
-                          radius: 50,
-                          backgroundImage: AssetImage("assets/image-albert.png"),
+                          radius: 28,
+                          backgroundImage: NetworkImage(_user!.imageUrl),
                         ),
                         Positioned(
                           bottom: 0,
@@ -122,14 +143,15 @@ class _ProfilPageState extends State<ProfilPage> with SingleTickerProviderStateM
                               color: Colors.white,
                               shape: BoxShape.circle,
                             ),
-                            child: Icon(Icons.camera_alt, size: 20, color: Color(0xFF89BDB8)),
+                            child: Icon(Icons.camera_alt,
+                                size: 20, color: Color(0xFF89BDB8)),
                           ),
                         ),
                       ],
                     ),
                     SizedBox(height: 16),
                     Text(
-                      "Albert William Adolphe Seck",
+                      _user!.fullName,
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 24,
@@ -149,11 +171,16 @@ class _ProfilPageState extends State<ProfilPage> with SingleTickerProviderStateM
               ),
             ),
             SizedBox(height: 24),
-            Row(
-              children: [
-                SizedBox(width: 10),
-                Text("Statistiques", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),),
-                      ]            ),
+            Row(children: [
+              SizedBox(width: 10),
+              Text(
+                "Statistiques",
+                style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87),
+              ),
+            ]),
             // Statistiques
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 5),
@@ -196,18 +223,22 @@ class _ProfilPageState extends State<ProfilPage> with SingleTickerProviderStateM
                   _buildInfoTile(
                     icon: Icons.person_outline,
                     title: "Nom complet",
-                    subtitle: "Albert William Adolphe Seck",
+                    subtitle: _user!.fullName,
                   ),
                   _buildInfoTile(
                     icon: Icons.phone_outlined,
                     title: "Téléphone",
-                    subtitle: "+221 77 123 45 67",
+                    subtitle: _user!.telephone,
                   ),
-                  
+                  _buildInfoTile(
+                    icon: Icons.location_city_outlined,
+                    title: "Commune",
+                    subtitle: _user!.commune,
+                  ),
                   _buildInfoTile(
                     icon: Icons.location_on_outlined,
-                    title: "Commune",
-                    subtitle: "Thiès",
+                    title: "Adresse",
+                    subtitle: "Dakar, Sénégal",
                   ),
                 ],
               ),

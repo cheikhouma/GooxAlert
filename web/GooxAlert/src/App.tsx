@@ -15,6 +15,7 @@ import ReportIssuePage from './pages/ReportIssuePage';
 import IssueMapPage from './pages/IssueMapPage';
 import IssueDetailsPage from './pages/IssueDetailsPage';
 import ProfilePage from './pages/ProfilePage';
+import EditProfilePage from './pages/EditProfilePage';
 import NotFoundPage from './pages/NotFoundPage';
 import PrivacyPage from './pages/PrivacyPage';
 import TermsPage from './pages/TermsPage';
@@ -22,6 +23,8 @@ import AboutPage from './pages/AboutPage';
 import OTPVerificationPage from './pages/OTPVerificationPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
+import EditPassword from './pages/EditPassword';
+import ConfirmationPage from './pages/ConfirmationPage';
 
 const App: React.FC = () => {
   return (
@@ -34,34 +37,54 @@ const App: React.FC = () => {
             <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
-            <Route path="/verify-otp" element={<OTPVerificationPage />} />
-            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/otp-verification" element={<OTPVerificationPage />} />
+            <Route path="/mot-de-passe-oublie" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/privacy" element={<PrivacyPage />} />
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/about" element={<AboutPage />} />
             
+            
+         
+            
             {/* Routes protégées (utilisateur) */}
             <Route
               path="/profile"
               element={
-                <ProtectedRoute requiredRole="user">
+                <ProtectedRoute>
                   <ProfilePage />
                 </ProtectedRoute>
               }
             />
             <Route
+              path="/profile/edit"
+              element={
+                <ProtectedRoute>
+                  <EditProfilePage />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route 
+              path="/profile/edit-password" 
+              element={
+                <ProtectedRoute>
+                  <EditPassword />
+                </ProtectedRoute>
+              } 
+            />
+            <Route
               path="/dashboard"
               element={
-                <ProtectedRoute requiredRole="user">
+                <ProtectedRoute>
                   <DashboardPage />
                 </ProtectedRoute>
               }
             />
             <Route
-              path="/report"
+              path="/signaler"
               element={
-                <ProtectedRoute requiredRole="user">
+                <ProtectedRoute>
                   <ReportIssuePage />
                 </ProtectedRoute>
               }
@@ -69,20 +92,28 @@ const App: React.FC = () => {
             <Route
               path="/map"
               element={
-                <ProtectedRoute requiredRole="user">
+                <ProtectedRoute>
                   <IssueMapPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/confirmation"
+              element={
+                <ProtectedRoute>
+                  <ConfirmationPage />
                 </ProtectedRoute>
               }
             />
             <Route
               path="/issues/:id"
               element={
-                <ProtectedRoute requiredRole="user">
+                <ProtectedRoute>
                   <IssueDetailsPage />
                 </ProtectedRoute>
               }
             />
-         
+          
             {/* Routes protégées (admin) */}
             <Route
               path="/admin/*"

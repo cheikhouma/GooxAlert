@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { MapPin, Lock, Phone } from 'lucide-react';
 import { Input } from '../components/common/Input';
+import { validatePhone } from '../utils/validation';
 
 const LoginPage = () => {
   const [telephone, setTelephone] = useState('');
@@ -12,16 +13,16 @@ const LoginPage = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-
+  const message = location.state?.message;
   const from = (location.state as any)?.from?.pathname || '/dashboard';
 
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
-
+    
     if (!telephone.trim()) {
       newErrors.telephone = 'Veuillez entrer votre numéro de téléphone';
-    } else if (!/^\+221\s?[0-9]{2}\s?[0-9]{3}\s?[0-9]{2}\s?[0-9]{2}$/.test(telephone)) {
-      newErrors.telephone = 'Veuillez entrer un numéro de téléphone valide au format +221 77 123 45 67';
+    } else if (!validatePhone(telephone)) {
+      newErrors.telephone = 'Veuillez entrer un numéro valide, exemple : +221 77 123 45 67 ou 771234567';
     }
 
     if (!password) {
@@ -43,7 +44,16 @@ const LoginPage = () => {
     setErrors({});
 
     try {
-      await login(telephone, password);
+      // Standardiser le numéro de téléphone
+      const cleanPhone = telephone.replace(/\s+/g, '');
+      let standardizedPhone = cleanPhone;
+
+      // Si numéro local commençant par 7x et 9 chiffres sans +221
+      if (/^0?(75|76|77|78|70)[0-9]{7}$/.test(cleanPhone)) {
+        standardizedPhone = `+221${cleanPhone.replace(/^0/, '')}`;
+      }
+
+      await login(standardizedPhone, password);
       navigate(from, { replace: true });
     } catch (err) {
       console.error('Login failed:', err);
@@ -78,6 +88,12 @@ const LoginPage = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
+        {message && (
+          <div className="bg-green-50 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <strong className="font-bold">Succès !</strong>
+            <span className="block sm:inline"> {message}</span>
+          </div>
+        )}
         <div className="text-center">
           <div className="flex justify-center">
             <MapPin className="h-12 w-12 text-primary-600" />
@@ -138,7 +154,7 @@ const LoginPage = () => {
             </div>
 
             <div className="text-sm">
-              <Link to="/forgot-password" className="font-medium text-primary-600 hover:text-primary-500">
+              <Link to="/mot-de-passe-oublie" className="font-medium text-primary-600 hover:text-primary-500">
                 Mot de passe oublié ?
               </Link>
             </div>
@@ -180,43 +196,8 @@ const LoginPage = () => {
             </button>
           </div>
         </form>
-
-        <div className="mt-6">
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-gray-50 text-gray-500">
-                Pour démonstration uniquement
-              </span>
-            </div>
-          </div>
-
-          <div className="mt-6 grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={() => {
-                setTelephone('+221 77 123 45 67');
-                setPassword('password');
-              }}
-              className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-            >
-              Compte utilisateur
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setTelephone('+221 77 987 65 43');
-                setPassword('password');
-              }}
-              className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-            >
-              Compte admin
-            </button>
-          </div>
-        </div>
       </div>
+        
     </div>
   );
 };

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'login.dart';
-import 'navigation/signalements.dart';
+import 'auth/login.dart';
+import 'navigation/signalements/signalements.dart';
 import 'theme/app_theme.dart';
 
 void main() {

@@ -1,7 +1,7 @@
-import  { useState } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { Menu, X, LogOut, User, Plus, Map, LayoutDashboard } from 'lucide-react';
+import { Menu, X, LogOut, User, Plus, Map, LayoutDashboard, LucideLayoutDashboard } from 'lucide-react';
 
 const Header = () => {
   const { user, isAuthenticated, isAdmin, logout } = useAuth();
@@ -30,42 +30,49 @@ const Header = () => {
               <Link to="/map" className="text-gray-700 hover:text-primary-600 px-3 py-2 text-sm font-medium">
                 Carte des signalements
               </Link>
-              <Link to="/report" className="text-gray-700 hover:text-primary-600 px-3 py-2 text-sm font-medium">
+              <Link to="/signaler" className="text-gray-700 hover:text-primary-600 px-3 py-2 text-sm font-medium">
                 Signaler un problème
               </Link>
             </nav>
           </div>
-          
+
           <div className="hidden md:flex items-center">
             {isAuthenticated ? (
               <div className="flex items-center space-x-4">
                 {isAdmin && (
-                  <Link 
-                    to="/admin" 
+                  <Link
+                    to="/admin"
                     className="text-gray-700 hover:text-primary-600 px-3 py-2 text-sm font-medium flex items-center"
                   >
                     <LayoutDashboard className="w-5 h-5 mr-1" />
                     Administration
                   </Link>
                 )}
-                <Link 
-                  to="/dashboard" 
+                <Link
+                  to="/dashboard"
+                  className="text-gray-700 hover:text-primary-600 px-3 py-2 text-sm font-medium flex items-center"
+                >
+                  <LucideLayoutDashboard className="w-5 h-5 mr-1" />
+                  Tableau de bord
+                </Link>
+                <Link
+                  to="/profile"
                   className="text-gray-700 hover:text-primary-600 px-3 py-2 text-sm font-medium flex items-center"
                 >
                   <User className="w-5 h-5 mr-1" />
                   Mon profil
                 </Link>
-                <button 
+                <button
                   onClick={handleLogout}
                   className="text-gray-700 hover:text-primary-600 px-3 py-2 text-sm font-medium flex items-center"
                 >
                   <LogOut className="w-5 h-5 mr-1" />
                   Déconnexion
                 </button>
-                {user?.avatar && (
-                  <img 
-                    src={user.avatar} 
-                    alt={user.name} 
+                {user?.image_url && (
+                  <img
+                    src={user.image_url}
+                    alt={user.full_name}
                     className="h-8 w-8 rounded-full"
                   />
                 )}
@@ -87,7 +94,7 @@ const Header = () => {
               </div>
             )}
           </div>
-          
+
           {/* Mobile menu button */}
           <div className="flex items-center md:hidden">
             <button
@@ -118,45 +125,31 @@ const Header = () => {
             </Link>
             <Link
               to="/map"
-              className="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-primary-600 flex items-center"
+              className=" px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-primary-600 flex items-center"
               onClick={() => setMobileMenuOpen(false)}
             >
               <Map className="w-5 h-5 mr-2" />
               Carte des signalements
             </Link>
             <Link
-              to="/report"
-              className="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-primary-600 flex items-center"
+              to="/signaler"
+              className=" px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-primary-600 flex items-center"
               onClick={() => setMobileMenuOpen(false)}
             >
               <Plus className="w-5 h-5 mr-2" />
               Signaler un problème
             </Link>
           </div>
-          
+
           <div className="pt-4 pb-3 border-t border-gray-200">
             {isAuthenticated ? (
               <div>
-                <div className="flex items-center px-4">
-                  {user?.avatar && (
-                    <div className="flex-shrink-0">
-                      <img
-                        className="h-10 w-10 rounded-full"
-                        src={user.avatar}
-                        alt={user.name}
-                      />
-                    </div>
-                  )}
-                  <div className="ml-3">
-                    <div className="text-base font-medium text-gray-800">{user?.name}</div>
-                    <div className="text-sm font-medium text-gray-500">{user?.email}</div>
-                  </div>
-                </div>
+
                 <div className="mt-3 space-y-1">
                   {isAdmin && (
                     <Link
                       to="/admin"
-                      className="block px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-primary-600 flex items-center"
+                      className=" px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-primary-600 flex items-center"
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       <LayoutDashboard className="w-5 h-5 mr-2" />
@@ -165,15 +158,37 @@ const Header = () => {
                   )}
                   <Link
                     to="/dashboard"
-                    className="block px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-primary-600 flex items-center"
+                    className="px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-primary-600 flex items-center"
+                  >
+                    <LucideLayoutDashboard className="w-5 h-5 mr-2" />
+                    Tableau de bord
+                  </Link>
+                  <Link
+                    to="/dashboard"
+                    className="px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-primary-600 flex items-center"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     <User className="w-5 h-5 mr-2" />
                     Mon profil
                   </Link>
+                  <div className="flex items-center px-4">
+                    {user?.image_url && (
+                      <div className="flex-shrink-0">
+                        <img
+                          className="h-10 w-10 rounded-full"
+                          src={user.image_url}
+                          alt={user.full_name}
+                        />
+                      </div>
+                    )}
+                    <div className="ml-3">
+                      <div className="text-base font-medium text-gray-800">{user?.full_name}</div>
+                      <div className="text-sm font-medium text-gray-500">{user?.telephone}</div>
+                    </div>
+                  </div>
                   <button
                     onClick={handleLogout}
-                    className="block w-full text-left px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-primary-600 flex items-center"
+                    className=" w-full text-left px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-primary-600 flex items-center"
                   >
                     <LogOut className="w-5 h-5 mr-2" />
                     Déconnexion

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Lock, Phone, MapPin, User, ArrowRight } from 'lucide-react';
 import { Input } from '../components/common/Input';
+import { validatePhone, validateName, validateCommune } from '../utils/validation';
 
 const COMMUNES = [
   'Dakar',
@@ -31,16 +32,20 @@ const RegisterPage = () => {
 
     if (!name.trim()) {
       newErrors.name = 'Veuillez entrer votre nom complet';
+    } else if (!validateName(name)) {
+      newErrors.name = 'Veuillez separer votre nom et prenom par un espace';
     }
-
+    
     if (!telephone.trim()) {
       newErrors.telephone = 'Veuillez entrer votre numéro de téléphone';
-    } else if (!/^\+221\s?[0-9]{2}\s?[0-9]{3}\s?[0-9]{2}\s?[0-9]{2}$/.test(telephone)) {
-      newErrors.telephone = 'Veuillez entrer un numéro de téléphone valide au format +221 77 123 45 67';
+    } else if (!validatePhone(telephone)) {
+      newErrors.telephone = 'Veuillez entrer un numéro valide, exemple : +221 77 123 45 67 ou 771234567';
     }
 
     if (!commune) {
       newErrors.commune = 'Veuillez sélectionner votre commune';
+    } else if (!validateCommune(commune)) {
+      newErrors.commune = 'Veuillez sélectionner une commune valide';
     }
 
     if (!password) {
@@ -66,7 +71,7 @@ const RegisterPage = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -75,11 +80,31 @@ const RegisterPage = () => {
     setErrors({});
 
     try {
-      await register(name, telephone, password);
-      navigate('/verify-otp', { state: { telephone } });
-    } catch (err) {
+      // Standardiser le numéro de téléphone
+      const cleanPhone = telephone.replace(/\s+/g, '');
+      let standardizedPhone = cleanPhone;
+
+      // Si numéro local commençant par 7x et 9 chiffres sans +221
+      if (/^0?(75|76|77|78|70)[0-9]{7}$/.test(cleanPhone)) {
+        standardizedPhone = `+221${cleanPhone.replace(/^0/, '')}`;
+      }
+
+      await register(name, standardizedPhone, password, commune);
+      navigate('/login', {
+        state: {
+          message: 'Inscription réussie ! Vous pouvez maintenant vous connecter.',
+          telephone: standardizedPhone
+        }
+      });
+    } catch (err: any) {
       console.error('Registration failed:', err);
-      setErrors({ submit: 'L\'inscription a échoué. Veuillez réessayer.' });
+      let errorMessage = 'L\'inscription a échoué. Veuillez réessayer.';
+
+      if (err.message) {
+        errorMessage = err.message;
+      }
+
+      setErrors({ submit: errorMessage });
     } finally {
       setLoading(false);
     }
@@ -92,7 +117,7 @@ const RegisterPage = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    
+
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
@@ -177,9 +202,8 @@ const RegisterPage = () => {
                   name="commune"
                   value={commune}
                   onChange={handleInputChange}
-                  className={`w-full pl-10 pr-4 py-3 border ${
-                    errors.commune ? 'border-red-300' : 'border-gray-300'
-                  } rounded-md focus:outline-none focus:ring-2 focus:ring-primary-300 appearance-none bg-white`}
+                  className={`w-full pl-10 pr-4 py-3 border ${errors.commune ? 'border-red-300' : 'border-gray-300'
+                    } rounded-md focus:outline-none focus:ring-2 focus:ring-primary-300 appearance-none bg-white`}
                   required
                 >
                   <option value="">Sélectionnez votre commune</option>
@@ -247,9 +271,8 @@ const RegisterPage = () => {
               type="checkbox"
               required
               onChange={handleInputChange}
-              className={`h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded ${
-                errors.terms ? 'border-red-300' : ''
-              }`}
+              className={`h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded ${errors.terms ? 'border-red-300' : ''
+                }`}
             />
             <label htmlFor="terms" className="ml-2 block text-sm text-gray-900">
               J'accepte les{' '}

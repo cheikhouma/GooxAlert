@@ -1,10 +1,43 @@
 import 'package:flutter/material.dart';
+import 'package:gooxalert/models/signalements.dart';
+import 'package:gooxalert/models/user.dart';
+import 'package:gooxalert/services/auth_services.dart';
 
-class Home extends StatelessWidget {
+class Home extends StatefulWidget {
+  @override
+  State<Home> createState() => _HomeState();
+}
+
+class _HomeState extends State<Home> {
+  UserModel? _user;
+  List<SignalementModel>? _signalements;
+
+  @override
+  void initState() {
+    super.initState();
+    AuthService.getCurrentUser().then((user) {
+      setState(() {
+        _user = user;
+      });
+    });
+    AuthService.getUserSignalements().then((signalements) {
+      setState(() {
+        _signalements = signalements;
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (_user == null) {
+      return Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
     return Scaffold(
-      backgroundColor: Color(0xFFF9F7F3),
+      extendBodyBehindAppBar: true,
+      backgroundColor: Color.fromARGB(255, 255, 255, 255),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(vertical: 0, horizontal: 0),
         child: Column(
@@ -31,7 +64,7 @@ class Home extends StatelessWidget {
                   children: [
                     CircleAvatar(
                       radius: 28,
-                      backgroundImage: AssetImage('assets/image-albert.png'),
+                      backgroundImage: NetworkImage(_user!.imageUrl),
                     ),
                     SizedBox(width: 12),
                     Expanded(
@@ -39,7 +72,7 @@ class Home extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Albert William Adolphe Seck',
+                            _user!.fullName,
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
@@ -121,35 +154,39 @@ class Home extends StatelessWidget {
               ),
             ),
             SizedBox(height: 12),
-            // Liste horizontale des signalements
-            Container(
-              height: 150,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                padding: EdgeInsets.symmetric(horizontal: 12),
-                children: [
-                  _ReportCard(
-                    image: 'https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=400&q=80',
-                    category: 'Lumière',
-                    title: 'Lampadaire cassé',
-                    status: 'En attente',
+            // Exemple : liste horizontale dynamique des signalements
+            FutureBuilder<List<SignalementModel>?>(
+              future: AuthService.getUserSignalements(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError) {
+                  return Center(child: Text('Erreur: ${snapshot.error}'));
+                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return Center(child: Text('Aucun signalement trouvé.'));
+                }
+
+                final signalements = snapshot.data!;
+
+                return Container(
+                  height: 150,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    padding: EdgeInsets.symmetric(horizontal: 12),
+                    itemCount: signalements.length,
+                    separatorBuilder: (_, __) => SizedBox(width: 12),
+                    itemBuilder: (context, index) {
+                      final s = signalements[index];
+                      return _ReportCard(
+                        image: s.imageUrl ?? '',
+                        category: s.category,
+                        title: s.title,
+                        status: s.status,
+                      );
+                    },
                   ),
-                  SizedBox(width: 12),
-                  _ReportCard(
-                    image: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80',
-                    category: 'Voirie',
-                    title: 'Nid de poule',
-                    status: 'En attente',
-                  ),
-                  SizedBox(width: 12),
-                  _ReportCard(
-                    image: 'https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=400&q=80',
-                    category: 'Déchets',
-                    title: 'Tas d\'ordures',
-                    status: 'En attente',
-                  ),
-                ],
-              ),
+                );
+              },
             ),
             SizedBox(height: 32),
           ],
@@ -163,8 +200,8 @@ class _StatCard extends StatelessWidget {
   final IconData icon;
   final String value;
   final String label;
-  const _StatCard({required this.icon, required this.value, required this.label});
-
+  const _StatCard(
+      {required this.icon, required this.value, required this.label});
 
   @override
   Widget build(BuildContext context) {
@@ -181,7 +218,8 @@ class _StatCard extends StatelessWidget {
           SizedBox(height: 8),
           Text(
             value,
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.black),
+            style: TextStyle(
+                fontWeight: FontWeight.bold, fontSize: 20, color: Colors.black),
           ),
           SizedBox(height: 4),
           Text(
@@ -200,7 +238,11 @@ class _ReportCard extends StatelessWidget {
   final String category;
   final String title;
   final String status;
-  const _ReportCard({required this.image, required this.category, required this.title, required this.status});
+  const _ReportCard(
+      {required this.image,
+      required this.category,
+      required this.title,
+      required this.status});
 
   @override
   Widget build(BuildContext context) {
@@ -262,7 +304,8 @@ class _ReportCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.lightbulb_outline, size: 16, color: Color(0xFF89BDB8)),
+                    Icon(Icons.lightbulb_outline,
+                        size: 16, color: Color(0xFF89BDB8)),
                     SizedBox(width: 4),
                     Text(
                       category,

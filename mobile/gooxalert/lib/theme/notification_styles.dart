@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 
 class NotificationStyles {
   // Couleurs pour différents types de notifications
-  static const Color dangerColor = Color(0xFFE53935);
-  static const Color warningColor = Color(0xFFFFA000);
-  static const Color successColor = Color(0xFF43A047);
-  static const Color infoColor = Color(0xFF1E88E5);
-  static const Color neutralColor = Color(0xFF757575);
+  static const Color dangerColor = Color(0xFFDC3545);    // Rouge plus vif
+  static const Color warningColor = Color(0xFFFFC107);   // Jaune plus doux
+  static const Color successColor = Color(0xFF28A745);   // Vert plus frais
+  static const Color infoColor = Color(0xFF17A2B8);      // Bleu plus doux
+  static const Color neutralColor = Color(0xFF6C757D);   // Gris plus moderne
 
   // Style pour le conteneur principal de la notification
   static BoxDecoration getNotificationDecoration({
@@ -112,16 +112,16 @@ class NotificationCard extends StatelessWidget {
 
   Color _getStatusColor() {
     switch (status.toLowerCase()) {
-      case 'danger':
-        return NotificationStyles.dangerColor;
-      case 'warning':
-        return NotificationStyles.warningColor;
-      case 'success':
-        return NotificationStyles.successColor;
-      case 'info':
+      case 'en cours':
         return NotificationStyles.infoColor;
+      case 'résolu':
+        return NotificationStyles.successColor;
+      case 'rejeté':
+        return NotificationStyles.dangerColor;
+      case 'nouveau':
+        return NotificationStyles.warningColor;
       default:
-        return NotificationStyles.neutralColor;
+        throw ArgumentError('Statut invalide: $status. Les statuts valides sont: en cours, résolu, rejeté, nouveau');
     }
   }
 

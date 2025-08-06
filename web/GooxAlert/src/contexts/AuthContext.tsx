@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '../types';
+import * as authService from '../services/authService';
 
 interface AuthContextType {
   user: User | null;
@@ -7,91 +8,74 @@ interface AuthContextType {
   isAdmin: boolean;
   isInitialized: boolean;
   login: (telephone: string, password: string) => Promise<void>;
-  register: (name: string, telephone: string, password: string) => Promise<void>;
+  register: (name: string, telephone: string, password: string, commune: string) => Promise<void>;
   logout: () => void;
+  updateUser: (updatedUser: User) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const updateUser = (updatedUser: User) => {
+    setUser(updatedUser);
+    localStorage.setItem('gooxAlertUser', JSON.stringify(updatedUser));
+  };
+  
   const [user, setUser] = useState<User | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    // Check if user is stored in localStorage
-    const storedUser = localStorage.getItem('smartDakarUser');
+    const storedUser = localStorage.getItem('gooxAlertUser');
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
     setIsInitialized(true);
   }, []);
-
-  // Mock login function
+  
   const login = async (telephone: string, password: string) => {
-    // This would be replaced with actual API call
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    password +='';
-    // Mock user based on telephone for demo purposes
-    const isAdminPhone = telephone.includes('987');
-    const mockUser: User = {
-      id: '1',
-      name: telephone.split(' ')[2], // Utilise une partie du numéro comme nom pour la démo
-      telephone,
-      role: isAdminPhone ? 'admin' : 'user',
-      avatar: `https://ui-avatars.com/api/?name=${telephone.split(' ')[2]}&background=10B981&color=fff`
-    };
-    
-    setUser(mockUser);
-    localStorage.setItem('smartDakarUser', JSON.stringify(mockUser));
+    const userData = await authService.login({ telephone, password });
+    setUser(userData.user);
+    console.log(userData)
+    localStorage.setItem('gooxAlertUser', JSON.stringify(userData.user));
+
+      // Enregistre les tokens
+  localStorage.setItem('accessToken', userData.tokens.access);
+  localStorage.setItem('refreshToken', userData.tokens.refresh);
   };
 
-  // Mock register function
-  const register = async (name: string, telephone: string, password: string) => {
-    // This would be replaced with actual API call
-    await new Promise(resolve => setTimeout(resolve, 800));
-
-    password +='';
-    
-    const mockUser: User = {
-      id: Math.random().toString(36).substr(2, 9),
-      name,
-      telephone,
-      role: 'user',
-      avatar: `https://ui-avatars.com/api/?name=${name}&background=10B981&color=fff`
-    };
-    
-    setUser(mockUser);
-    localStorage.setItem('smartDakarUser', JSON.stringify(mockUser));
+  const register = async (name: string, telephone: string, password: string, commune: string) => {
+    const registerData = { full_name: name, telephone, commune, password };
+    await authService.register(registerData);
+   
   };
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem('smartDakarUser');
+    localStorage.removeItem('gooxAlertUser');
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
   };
-
-  const value = {
-    user,
-    isAuthenticated: !!user,
-    isAdmin: user?.role === 'admin',
-    isInitialized,
-    login,
-    register,
-    logout
-  };
-
+  
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider
+    value={{
+        user,
+        isAuthenticated: !!user,
+        isAdmin: user?.role === 'admin',
+        isInitialized,
+        login,
+        register,
+        logout,
+        updateUser
+      }}
+      >
       {children}
     </AuthContext.Provider>
   );
+};
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) throw new Error('useAuth must be used within AuthProvider');
+  return context;
 };

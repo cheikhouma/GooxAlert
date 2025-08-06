@@ -1,11 +1,20 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:gooxalert/models/signalements.dart';
+import 'package:gooxalert/models/user.dart';
+import 'package:gooxalert/services/auth_services.dart';
+import 'package:gooxalert/services/issue_context.dart';
+import 'package:gooxalert/widgets/set_location.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:http/http.dart' as http;
 import 'dart:io';
 
 class Signaler extends StatefulWidget {
+  const Signaler({super.key});
+
   @override
   _SignalerState createState() => _SignalerState();
 }
@@ -13,12 +22,24 @@ class Signaler extends StatefulWidget {
 class _SignalerState extends State<Signaler> {
   String? selectedCategory = 'Lumière';
   final List<String> categories = [
-    'Lumière', 'Voirie', 'Déchets', 'Eau', 'Autre'
+    'Lumière',
+    'Voirie',
+    'Déchets',
+    'Eau',
+    'Autre'
   ];
 
   File? _imageFile;
   Position? _position;
   LatLng? _selectedLatLng;
+
+  UserModel? _user;
+
+  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
+
+  bool _isSubmitting = false;
+  String? _error;
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
@@ -39,17 +60,25 @@ class _SignalerState extends State<Signaler> {
     LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        return;
-      }
+      if (permission == LocationPermission.denied) return;
     }
-    if (permission == LocationPermission.deniedForever) {
-      return;
-    }
-    final pos = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+    if (permission == LocationPermission.deniedForever) return;
+
+    final pos = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high);
     setState(() {
       _position = pos;
       _selectedLatLng = LatLng(pos.latitude, pos.longitude);
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    AuthService.getCurrentUser().then((user) {
+      setState(() {
+        _user = user;
+      });
     });
   }
 
@@ -69,10 +98,77 @@ class _SignalerState extends State<Signaler> {
     }
   }
 
+  Future<void> _submitSignalement() async {
+    if (_titleController.text.isEmpty ||
+        _descriptionController.text.isEmpty ||
+        selectedCategory == null ||
+        _selectedLatLng == null) {
+      setState(() {
+        _error = 'Tous les champs obligatoires doivent être remplis.';
+      });
+      return;
+    }
+
+    setState(() {
+      _isSubmitting = true;
+      _error = null;
+    });
+
+    try {
+      final token = await AuthService.getToken();
+      String? imageUrl;
+
+      if (_imageFile != null) {
+        imageUrl = await uploadImageToImgBB(_imageFile!);
+      }
+
+      final SignalementModel issueData = SignalementModel(
+        id: 0, // valeur temporaire, sera écrasée par le backend
+        title: _titleController.text,
+        description: _descriptionController.text,
+        imageUrl: imageUrl ?? '',
+        location: '${_selectedLatLng!.latitude},${_selectedLatLng!.longitude}',
+        category: selectedCategory!,
+        status:
+            'en_attente', // valeur initiale logique, à ajuster selon ton backend
+        createdAt: DateTime.now(), // valeur locale temporaire
+        user: _user!.id,
+      );
+
+      if (token == null) {
+        setState(() {
+          _error = 'Votre session a expiré. Veuillez vous reconnecter.';
+          _isSubmitting = false;
+        });
+        return;
+      }
+
+      await addIssue(
+        issueData,
+        token,
+        (bool refresh) async {},
+        (String? err) => setState(() => _error = err),
+      );
+
+      Navigator.of(context).pop(true);
+    } catch (e) {
+      setState(() => _error = 'Erreur : ${e.toString()}');
+    } finally {
+      setState(() => _isSubmitting = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFF9F7F3),
+      backgroundColor: Color.fromARGB(255, 255, 255, 255),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.only(left: 16, right: 16, top: 60),
@@ -83,30 +179,39 @@ class _SignalerState extends State<Signaler> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black26,
+                    blurRadius: 10,
+                    offset: Offset(0, 5),
+                  ),
+                ],
               ),
-              padding: EdgeInsets.symmetric(horizontal: 24),
+              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Titre
                   Text('Titre', style: Theme.of(context).textTheme.titleMedium),
                   SizedBox(height: 8),
                   TextField(
+                    controller: _titleController,
                     decoration: InputDecoration(
                       hintText: "Exemple: lampadaire cassée sur l'avenue...",
                     ),
                   ),
                   SizedBox(height: 24),
-                  // Catégorie
-                  Text('Catégorie', style: Theme.of(context).textTheme.titleMedium),
+                  Text('Catégorie',
+                      style: Theme.of(context).textTheme.titleMedium),
                   SizedBox(height: 8),
                   DropdownButtonFormField<String>(
                     value: selectedCategory,
                     decoration: InputDecoration(),
-                    items: categories.map((cat) => DropdownMenuItem(
-                      value: cat,
-                      child: Text(cat),
-                    )).toList(),
+                    items: categories
+                        .map((cat) => DropdownMenuItem(
+                              value: cat,
+                              child: Text(cat),
+                            ))
+                        .toList(),
                     onChanged: (value) {
                       setState(() {
                         selectedCategory = value;
@@ -114,25 +219,28 @@ class _SignalerState extends State<Signaler> {
                     },
                   ),
                   SizedBox(height: 24),
-                  // Description
-                  Text('Description', style: Theme.of(context).textTheme.titleMedium),
+                  Text('Description',
+                      style: Theme.of(context).textTheme.titleMedium),
                   SizedBox(height: 8),
                   TextField(
+                    controller: _descriptionController,
                     minLines: 4,
                     maxLines: 6,
                     decoration: InputDecoration(),
                   ),
                   SizedBox(height: 24),
-                  // Localisation
-                  Text('Localisation', style: Theme.of(context).textTheme.titleMedium),
+                  Text('Localisation',
+                      style: Theme.of(context).textTheme.titleMedium),
                   SizedBox(height: 12),
                   Row(
                     children: [
                       Expanded(
                         child: ElevatedButton.icon(
                           onPressed: _getCurrentLocation,
-                          icon: Icon(Icons.location_on_outlined, color: Colors.black),
-                          label: Text('votre position', style: TextStyle(color: Colors.black)),
+                          icon: Icon(Icons.location_on_outlined,
+                              color: Colors.black),
+                          label: Text('votre position',
+                              style: TextStyle(color: Colors.black)),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Color(0xFFB3D5D1),
                             elevation: 0,
@@ -147,7 +255,8 @@ class _SignalerState extends State<Signaler> {
                         child: ElevatedButton.icon(
                           onPressed: _openMapToSelectPoint,
                           icon: Icon(Icons.map_outlined, color: Colors.black),
-                          label: Text('voir carte', style: TextStyle(color: Colors.black)),
+                          label: Text('voir carte',
+                              style: TextStyle(color: Colors.black)),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Color(0xFFB3D5D1),
                             elevation: 0,
@@ -162,11 +271,14 @@ class _SignalerState extends State<Signaler> {
                   if (_selectedLatLng != null)
                     Padding(
                       padding: const EdgeInsets.only(top: 8.0),
-                      child: Text('Position: ${_selectedLatLng!.latitude.toStringAsFixed(5)}, ${_selectedLatLng!.longitude.toStringAsFixed(5)}', style: TextStyle(color: Colors.black54)),
+                      child: Text(
+                        'Position: ${_selectedLatLng!.latitude.toStringAsFixed(5)}, ${_selectedLatLng!.longitude.toStringAsFixed(5)}',
+                        style: TextStyle(color: Colors.black54),
+                      ),
                     ),
                   SizedBox(height: 24),
-                  // Ajouter une photo
-                  Text('Ajouter une photo', style: Theme.of(context).textTheme.titleMedium),
+                  Text('Ajouter une photo',
+                      style: Theme.of(context).textTheme.titleMedium),
                   SizedBox(height: 12),
                   GestureDetector(
                     onTap: _pickImage,
@@ -174,123 +286,54 @@ class _SignalerState extends State<Signaler> {
                       width: double.infinity,
                       height: 120,
                       decoration: BoxDecoration(
-                        border: Border.all(color: Theme.of(context).colorScheme.primary, style: BorderStyle.solid, width: 1),
+                        border: Border.all(
+                            color: Theme.of(context).colorScheme.primary,
+                            style: BorderStyle.solid,
+                            width: 1),
                         borderRadius: BorderRadius.circular(12),
                         color: Colors.transparent,
                       ),
                       child: _imageFile == null
-                          ? Center(child: Icon(Icons.photo_camera_outlined, size: 40, color: Theme.of(context).colorScheme.primary))
+                          ? Center(
+                              child: Icon(Icons.photo_camera_outlined,
+                                  size: 40,
+                                  color: Theme.of(context).colorScheme.primary))
                           : ClipRRect(
                               borderRadius: BorderRadius.circular(12),
-                              child: Image.file(_imageFile!, fit: BoxFit.cover, width: double.infinity, height: 120),
+                              child: Image.file(_imageFile!,
+                                  fit: BoxFit.cover,
+                                  width: double.infinity,
+                                  height: 120),
                             ),
                     ),
                   ),
-                  SizedBox(height: 32),
-                  // Bouton soumettre
+                  SizedBox(height: 16),
+                  if (_error != null)
+                    Text(_error!, style: TextStyle(color: Colors.red)),
+                  SizedBox(height: 16),
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: () {},
+                      onPressed: _isSubmitting ? null : _submitSignalement,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Theme.of(context).colorScheme.error,
                         foregroundColor: Colors.white,
-                        textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        textStyle: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 18),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
                         elevation: 0,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
-                      child: Text('Soumettre'),
+                      child: _isSubmitting
+                          ? CircularProgressIndicator(color: Colors.white)
+                          : Text('Soumettre'),
                     ),
                   ),
+                  SizedBox(height: 24),
                 ],
               ),
             ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// Nouvelle page pour sélectionner un point sur la carte
-class SelectLocationPage extends StatefulWidget {
-  final LatLng initialPosition;
-  const SelectLocationPage({required this.initialPosition});
-
-  @override
-  State<SelectLocationPage> createState() => _SelectLocationPageState();
-}
-
-class _SelectLocationPageState extends State<SelectLocationPage> {
-  LatLng? _pickedPoint;
-
-  @override
-  void initState() {
-    super.initState();
-    _pickedPoint = widget.initialPosition;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Choisir un point sur la carte', style: TextStyle(color: Colors.black)),
-        backgroundColor: Colors.white,
-        iconTheme: IconThemeData(color: Colors.black),
-        elevation: 1,
-      ),
-      body: FlutterMap(
-        options: MapOptions(
-          initialCenter: _pickedPoint!,
-          initialZoom: 15.0,
-          onTap: (tapPosition, latlng) {
-            setState(() {
-              _pickedPoint = latlng;
-            });
-          },
-        ),
-        children: [
-          TileLayer(
-            urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-            userAgentPackageName: 'com.example.gooxalert',
-          ),
-          if (_pickedPoint != null)
-            MarkerLayer(
-              markers: [
-                Marker(
-                  point: _pickedPoint!,
-                  width: 40,
-                  height: 40,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.red,
-                      shape: BoxShape.circle,
-                      boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 4)],
-                    ),
-                    child: Center(
-                      child: Icon(Icons.location_on, color: Colors.white, size: 24),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-        ],
-      ),
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Color(0xFF89BDB8),
-              foregroundColor: Colors.black,
-              padding: EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            ),
-            onPressed: () {
-              Navigator.pop(context, _pickedPoint);
-            },
-            child: Text('Valider ce point', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           ),
         ),
       ),

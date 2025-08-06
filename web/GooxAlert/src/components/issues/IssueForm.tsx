@@ -70,9 +70,8 @@ const IssueForm: React.FC<IssueFormProps> = ({ initialLocation }) => {
         title,
         description,
         category,
-        location,
-        imageUrl: imagePreview || undefined,
-        userId: user.id
+        location: `${location.lat},${location.lng}`,
+        image_url: imagePreview || null
       });
       
       // Navigate to the issue details page

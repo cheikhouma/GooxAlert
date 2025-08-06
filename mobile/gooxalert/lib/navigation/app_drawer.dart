@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import '../drawer/profil.dart';
 import '../drawer/settings.dart';
-import '../screens/notifications_screen.dart';
+import '../drawer/notifications.dart';
 import '../drawer/about.dart';
 import '../drawer/contact.dart';
 import '../drawer/rate_app.dart';
-import '../login.dart';
+import '../auth/login.dart';
 
 
 class AppDrawer extends StatelessWidget {
@@ -32,7 +32,7 @@ class AppDrawer extends StatelessWidget {
           ListTile(
             leading: Icon(Icons.notifications_none),
             title: Text('Notifications'),
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => NotificationsScreen())),
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => NotificationsPage())),
           ),
           ListTile(
             leading: Icon(Icons.info_outline),

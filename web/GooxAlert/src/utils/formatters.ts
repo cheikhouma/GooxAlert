@@ -55,3 +55,24 @@ export const formatDistanceToNow = (dateString: string): string => {
   const diffInYears = Math.floor(diffInMonths / 12);
   return `il y a ${diffInYears} an${diffInYears > 1 ? 's' : ''}`;
 };
+
+
+
+//  Fonction pour upload:
+// utils/imgbb.ts
+export const uploadToImgbb = async (file: File): Promise<string> => {
+  const formData = new FormData();
+  formData.append('image', file);
+
+  const response = await fetch(`https://api.imgbb.com/1/upload?key=49a117f96f4b6126c8c616a07f23eb06`, {
+    method: 'POST',
+    body: formData,
+  });
+
+  const data = await response.json();
+  if (data.success) {
+    return data.data.url;
+  } else {
+    throw new Error('Erreur lors de l\'upload de l\'image.');
+  }
+};

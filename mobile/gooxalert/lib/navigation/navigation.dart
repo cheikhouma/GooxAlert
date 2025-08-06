@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 import 'home.dart';
 import 'signaler.dart';
-import 'signalements.dart';
+import 'signalements/signalements.dart';
 import 'app_drawer.dart';
 
 class NavigationPage extends StatefulWidget {
+  const NavigationPage({super.key});
+
   @override
   State<NavigationPage> createState() => _NavigationPageState();
 }
 
 class _NavigationPageState extends State<NavigationPage> {
-  
   int _selectedIndex = 0;
 
   final List<Widget> _pages = [
@@ -48,9 +49,16 @@ class _NavigationPageState extends State<NavigationPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Color(0xFFF9F7F3),
+        backgroundColor: Color.fromARGB(255, 255, 255, 255),
         automaticallyImplyLeading: false,
+        title: Text(
+          'G o o x A l e r t',
+          style: TextStyle(
+            color: const Color.fromARGB(255, 142, 135, 135),
+            fontSize: 22,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
       ),
       drawer: AppDrawer(),
       body: Stack(

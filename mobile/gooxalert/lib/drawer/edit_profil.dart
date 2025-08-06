@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class EditProfilPage extends StatefulWidget {
+  const EditProfilPage({super.key});
+
   @override
   _EditProfilPageState createState() => _EditProfilPageState();
 }
@@ -73,7 +75,28 @@ class _EditProfilPageState extends State<EditProfilPage> {
           'Modifier le profil',
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
-        
+        actions: [
+          TextButton(
+            onPressed: _isLoading ? null : _saveChanges,
+            child: _isLoading
+                ? SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(Color(0xFF89BDB8)),
+                    ),
+                  )
+                : Text(
+                    'Enregistrer',
+                    style: TextStyle(
+                      color: Color(0xFF89BDB8),
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -136,7 +159,22 @@ class _EditProfilPageState extends State<EditProfilPage> {
                     return null;
                   },
                 ),
-               
+                SizedBox(height: 16),
+                _buildFormField(
+                  label: 'Email',
+                  controller: _emailController,
+                  icon: Icons.email_outlined,
+                  keyboardType: TextInputType.emailAddress,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Veuillez entrer votre email';
+                    }
+                    if (!value.contains('@')) {
+                      return 'Veuillez entrer un email valide';
+                    }
+                    return null;
+                  },
+                ),
                 SizedBox(height: 16),
                 _buildFormField(
                   label: 'Adresse',
@@ -168,7 +206,8 @@ class _EditProfilPageState extends State<EditProfilPage> {
                             height: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(Colors.white),
                             ),
                           )
                         : Text(
@@ -225,4 +264,4 @@ class _EditProfilPageState extends State<EditProfilPage> {
       ),
     );
   }
-} 
+}
